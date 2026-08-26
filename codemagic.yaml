@@ -1,0 +1,155 @@
+# Codemagic build yapılandırması (başlangıç şablonu)
+# Codemagic bu dosyayı deponda otomatik bulur. Yine de Codemagic paneline
+# girip "Capacitor" proje sihirbazını kullanman, kendi kendine benzer bir
+# dosya önerecektir - bu dosyayı ondan sonra karşılaştırıp güncelleyebilirsin.
+#
+# Doldurman gerekenler:
+#  - Codemagic panelinde "App Store Connect" entegrasyonunu (API key ile) kurup
+#    aşağıdaki "codemagic_api_key" ismini kendi verdiğin isimle eşleştir.
+#  - bundle_identifier: capacitor.config.json'daki appId ile aynı olmalı.
+
+workflows:
+  ios-release:
+    name: Glowo - iOS Release
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: codemagic_api_key
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.yusuf.glowo
+      vars:
+        XCODE_WORKSPACE: "App.xcworkspace"
+        XCODE_SCHEME: "App"
+      node: latest
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Bağımlılıkları kur
+        script: npm install
+      - name: Uygulama ikonu ve açılış ekranını oluştur
+        script: |
+          npm install @capacitor/assets --save-dev
+          npx capacitor-assets generate --iconBackgroundColor '#0a0a0d' --splashBackgroundColor '#0a0a0d'
+      - name: iOS platformunu ekle/güncelle
+        script: |
+          npx cap add ios || true
+          npx cap sync ios
+      - name: CocoaPods kurulumu
+        script: |
+          cd ios/App && pod install
+      - name: Code signing ayarlarını uygula
+        script: xcode-project use-profiles
+      - name: Sürüm numarasını artır
+        script: |
+          cd ios/App
+          agvtool new-version -all $BUILD_NUMBER
+      - name: IPA oluştur
+        script: |
+          xcode-project build-ipa \
+            --workspace ios/App/App.xcworkspace \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # submit_to_app_store: true   # hazır olduğunda bu satırı aç
+
+  # ============================================================
+  # ANDROID - APK üretimi (APKPure gibi üçüncü parti mağazalara
+  # yüklemek için). Bu iş akışı imzalı (signed) bir "release" APK
+  # üretir, çünkü çoğu mağaza imzasız/debug APK kabul etmez.
+  #
+  # NOT: İmzalama anahtarı (keystore) her build'de OTOMATİK üretilir
+  # ve build çıktısı olarak indirilebilir hale gelir
+  # (glowo-release-key.jks). İlk build'den sonra bu dosyayı indirip
+  # GÜVENLİ bir yerde sakla. Uygulamayı GÜNCELLERKEN aynı anahtarla
+  # imzalamak gerekir, yoksa mağazalar "farklı imza, güncelleme
+  # kabul edilmiyor" diyebilir. Şimdilik ilk sürüm için script kendi
+  # anahtarını üretiyor; ileride "kalıcı/sabit imza" istersen haber
+  # ver, o kısmı ayarlarız.
+  # ============================================================
+  android-release:
+    name: Glowo - Android Release (APK)
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      node: latest
+      vars:
+        PACKAGE_NAME: "com.yusuf.glowo"
+        KEYSTORE_PASSWORD: "GlowoApp2026!"
+        KEY_ALIAS: "glowo"
+    scripts:
+      - name: Bağımlılıkları kur
+        script: npm install
+      - name: Uygulama ikonu ve açılış ekranını oluştur
+        script: |
+          npm install @capacitor/assets --save-dev
+          npx capacitor-assets generate --iconBackgroundColor '#0a0a0d' --splashBackgroundColor '#0a0a0d'
+      - name: Android platformunu ekle/güncelle
+        script: |
+          npx cap add android || true
+          npx cap sync android
+      - name: İmzalama anahtarı (keystore) oluştur
+        script: |
+          keytool -genkeypair -v \
+            -keystore $CM_BUILD_DIR/glowo-release-key.jks \
+            -alias "$KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" \
+            -dname "CN=Glowo, OU=Glowo, O=Glowo, L=Istanbul, S=Istanbul, C=TR"
+      - name: Gradle'a imzalama ayarlarını ekle
+        script: |
+          cat >> android/app/build.gradle << EOF
+
+          android {
+              signingConfigs {
+                  release {
+                      storeFile file("\$CM_BUILD_DIR/glowo-release-key.jks")
+                      storePassword "$KEYSTORE_PASSWORD"
+                      keyAlias "$KEY_ALIAS"
+                      keyPassword "$KEYSTORE_PASSWORD"
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                  }
+              }
+          }
+          EOF
+      - name: Release APK derle
+        script: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleRelease
+    artifacts:
+      - android/app/build/outputs/apk/release/*.apk
+      - glowo-release-key.jks
+
+  # Daha hızlı/basit bir test derlemesi istersen (imzasız/debug APK,
+  # kendi telefonuna kurup denemek için yeterli, ama çoğu mağaza
+  # KABUL ETMEZ - sadece hızlı test amaçlı):
+  android-debug:
+    name: Glowo - Android Debug (test APK)
+    max_build_duration: 30
+    instance_type: linux_x2
+    environment:
+      node: latest
+    scripts:
+      - name: Bağımlılıkları kur
+        script: npm install
+      - name: Android platformunu ekle/güncelle
+        script: |
+          npx cap add android || true
+          npx cap sync android
+      - name: Debug APK derle
+        script: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleDebug
+    artifacts:
+      - android/app/build/outputs/apk/debug/*.apk
