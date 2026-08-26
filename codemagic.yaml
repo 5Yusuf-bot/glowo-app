@@ -28,6 +28,21 @@ workflows:
     scripts:
       - name: Bağımlılıkları kur
         script: npm install
+      - name: Web klasörünü hazırla
+        script: |
+          mkdir -p www resources
+          [ -f index.html ] && cp -f index.html www/index.html
+          [ -f glowo_icon_192.png ] && cp -f glowo_icon_192.png www/glowo_icon_192.png
+          [ -f glowo_icon_512.png ] && cp -f glowo_icon_512.png www/glowo_icon_512.png
+          [ -f manifest.json ] && cp -f manifest.json www/manifest.json
+          [ -f icon.png ] && cp -f icon.png resources/icon.png
+          [ -f splash.png ] && cp -f splash.png resources/splash.png
+          [ -f splash_dark.png ] && cp -f splash_dark.png resources/splash_dark.png
+          echo "--- www içeriği ---"; ls -la www
+          if [ ! -f www/index.html ]; then
+            echo "HATA: www/index.html bulunamadı. GitHub deponda index.html dosyasının (repo kökünde ya da www/ klasöründe) var olduğundan emin ol."
+            exit 1
+          fi
       - name: Uygulama ikonu ve açılış ekranını oluştur
         script: |
           npm install @capacitor/assets --save-dev
@@ -85,6 +100,21 @@ workflows:
     scripts:
       - name: Bağımlılıkları kur
         script: npm install
+      - name: Web klasörünü hazırla
+        script: |
+          mkdir -p www resources
+          [ -f index.html ] && cp -f index.html www/index.html
+          [ -f glowo_icon_192.png ] && cp -f glowo_icon_192.png www/glowo_icon_192.png
+          [ -f glowo_icon_512.png ] && cp -f glowo_icon_512.png www/glowo_icon_512.png
+          [ -f manifest.json ] && cp -f manifest.json www/manifest.json
+          [ -f icon.png ] && cp -f icon.png resources/icon.png
+          [ -f splash.png ] && cp -f splash.png resources/splash.png
+          [ -f splash_dark.png ] && cp -f splash_dark.png resources/splash_dark.png
+          echo "--- www içeriği ---"; ls -la www
+          if [ ! -f www/index.html ]; then
+            echo "HATA: www/index.html bulunamadı. GitHub deponda index.html dosyasının (repo kökünde ya da www/ klasöründe) var olduğundan emin ol."
+            exit 1
+          fi
       - name: Uygulama ikonu ve açılış ekranını oluştur
         script: |
           npm install @capacitor/assets --save-dev
@@ -140,6 +170,21 @@ workflows:
     scripts:
       - name: Bağımlılıkları kur
         script: npm install
+      - name: Web klasörünü hazırla
+        script: |
+          mkdir -p www resources
+          [ -f index.html ] && cp -f index.html www/index.html
+          [ -f glowo_icon_192.png ] && cp -f glowo_icon_192.png www/glowo_icon_192.png
+          [ -f glowo_icon_512.png ] && cp -f glowo_icon_512.png www/glowo_icon_512.png
+          [ -f manifest.json ] && cp -f manifest.json www/manifest.json
+          [ -f icon.png ] && cp -f icon.png resources/icon.png
+          [ -f splash.png ] && cp -f splash.png resources/splash.png
+          [ -f splash_dark.png ] && cp -f splash_dark.png resources/splash_dark.png
+          echo "--- www içeriği ---"; ls -la www
+          if [ ! -f www/index.html ]; then
+            echo "HATA: www/index.html bulunamadı. GitHub deponda index.html dosyasının (repo kökünde ya da www/ klasöründe) var olduğundan emin ol."
+            exit 1
+          fi
       - name: Android platformunu ekle/güncelle
         script: |
           npx cap add android || true
