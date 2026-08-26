@@ -2256,10 +2256,24 @@ document.getElementById("submitPost").addEventListener("click", async ()=>{
   const originalLabel = submitBtn.textContent;
   submitBtn.textContent = "Yükleniyor...";
   try{
-    const path = `videos/${myUid}/${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
-    const ref = storage.ref().child(path);
-    await ref.put(fileToSave);
-    const videoURL = await ref.getDownloadURL();
+    // Video dosyası Firebase Storage yerine Cloudinary'ye yükleniyor
+    // (Firebase Storage, Blaze (ücretli) plan gerektiriyor; Cloudinary'nin
+    // ücretsiz planı kart istemiyor ve video için yeterli).
+    const CLOUDINARY_CLOUD_NAME = "h2yj0ott";
+    const CLOUDINARY_UPLOAD_PRESET = "glowo_videos";
+    const cloudForm = new FormData();
+    cloudForm.append("file", fileToSave);
+    cloudForm.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`, {
+      method: "POST",
+      body: cloudForm
+    });
+    const cloudData = await cloudRes.json();
+    if(!cloudRes.ok || !cloudData.secure_url){
+      console.error("Cloudinary yükleme hatası:", cloudData);
+      throw new Error(cloudData?.error?.message || "Cloudinary yükleme hatası");
+    }
+    const videoURL = cloudData.secure_url;
 
     await db.collection("posts").add({
       uid: myUid,
