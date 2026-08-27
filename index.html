@@ -127,12 +127,7 @@
     position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#fff; font-size:13px; font-weight:600;
     background:rgba(0,0,0,.55); padding:8px 14px; border-radius:8px; z-index:1; white-space:nowrap;
   }
-  .vid-mute-btn{
-    position:absolute; top:14px; right:12px; z-index:3; width:36px; height:36px; border-radius:50%;
-    background:rgba(0,0,0,.4); border:none; display:flex; align-items:center; justify-content:center;
-    color:#fff; cursor:pointer; padding:0;
-  }
-  .vid-mute-btn svg{ width:19px; height:19px; }
+  .vid-mute-btn svg{ width:28px; height:28px; }
   .post-body{ position:relative; z-index:2; width:100%; display:flex; align-items:flex-end; padding:14px 10px 22px 14px; gap:10px;}
   .post-info{ flex:1; min-width:0; color:#fff;}
   .post-info .uname{ font-weight:700; font-size:15.5px; display:flex; align-items:center; gap:8px;}
@@ -1251,7 +1246,7 @@ function postNode(p){
     vid.load();
 
     const muteBtn = document.createElement("button");
-    muteBtn.className = "vid-mute-btn";
+    muteBtn.className = "act-btn vid-mute-btn";
     muteBtn.type = "button";
     muteBtn.innerHTML = feedMuted ? ICONS.volumeOff : ICONS.volumeOn;
     muteBtn.addEventListener("click", (ev)=>{
@@ -1260,7 +1255,9 @@ function postNode(p){
       document.querySelectorAll(".post video").forEach(v=>{ v.muted = feedMuted; });
       document.querySelectorAll(".vid-mute-btn").forEach(b=>{ b.innerHTML = feedMuted ? ICONS.volumeOff : ICONS.volumeOn; });
     });
-    el.appendChild(muteBtn);
+    const commentBtn = el.querySelector('[data-act="comment"]');
+    if(commentBtn) commentBtn.insertAdjacentElement("afterend", muteBtn);
+    else el.querySelector(".actions").appendChild(muteBtn);
   }
   if(p.textOverlays && p.textOverlays.length){
     const layer = document.createElement("div");
