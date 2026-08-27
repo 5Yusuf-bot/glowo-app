@@ -60,6 +60,17 @@
   }
   .maint-title{ font-size:20px; font-weight:800; color:#fff; margin-bottom:10px; }
   .maint-msg{ font-size:14.5px; line-height:1.5; color:#c7c7d1; white-space:pre-wrap; }
+  #banOverlay{
+    position:fixed; inset:0; z-index:99998; display:none; align-items:center; justify-content:center;
+    background:#0a0a0d; padding:30px;
+  }
+  #banOverlay.show{ display:flex; }
+  .report-reason-list{ display:flex; flex-direction:column; gap:8px; margin:10px 0 16px; }
+  .report-reason-btn{
+    text-align:left; background:var(--panel-2); border:1px solid var(--border); border-radius:10px;
+    padding:12px 14px; color:var(--text); font-size:14px; font-weight:600; cursor:pointer;
+  }
+  .report-reason-btn:active{ background:var(--panel); }
 
   /* ---------- Top bar ---------- */
   #topbar{
@@ -133,6 +144,18 @@
     background:rgba(0,0,0,.55); padding:8px 14px; border-radius:8px; z-index:1; white-space:nowrap;
   }
   .vid-mute-btn svg{ width:28px; height:28px; }
+  .vid-pause-icon{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2;
+    width:66px; height:66px; border-radius:50%; background:rgba(0,0,0,.42);
+    display:none; align-items:center; justify-content:center; pointer-events:none;
+  }
+  .vid-pause-icon.show{ display:flex; }
+  .vid-pause-icon svg{ width:30px; height:30px; color:#fff; margin-left:3px; }
+  .post-more-btn{
+    position:absolute; top:14px; right:12px; z-index:3; width:34px; height:34px; border-radius:50%;
+    background:rgba(0,0,0,.4); border:none; color:#fff; font-size:20px; font-weight:700; line-height:1;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0 0 4px;
+  }
   .post-body{ position:relative; z-index:2; width:100%; display:flex; align-items:flex-end; padding:14px 10px 22px 14px; gap:10px;}
   .post-info{ flex:1; min-width:0; color:#fff;}
   .post-info .uname{ font-weight:700; font-size:15.5px; display:flex; align-items:center; gap:8px;}
@@ -823,6 +846,30 @@
     </div>
   </div>
 
+  <div class="modal-overlay center" id="reportOverlay">
+    <div class="sheet">
+      <h3>İçeriği Şikayet Et</h3>
+      <div style="font-size:13px;color:var(--text-faint);margin-bottom:4px;">Neden şikayet ediyorsun?</div>
+      <div class="report-reason-list" id="reportReasonList">
+        <button class="report-reason-btn" data-reason="Uygunsuz / müstehcen içerik">Uygunsuz / müstehcen içerik</button>
+        <button class="report-reason-btn" data-reason="Nefret söylemi / taciz">Nefret söylemi / taciz</button>
+        <button class="report-reason-btn" data-reason="Şiddet">Şiddet</button>
+        <button class="report-reason-btn" data-reason="Spam">Spam</button>
+        <button class="report-reason-btn" data-reason="Diğer">Diğer</button>
+      </div>
+      <div class="modal-btns"><button class="btn-ghost" id="reportCancel" style="width:100%;">Vazgeç</button></div>
+    </div>
+  </div>
+
+  <div id="banOverlay">
+    <div class="maint-box">
+      <div class="maint-logo" style="background:linear-gradient(135deg,#f43f5e,#ef4444);">⛔</div>
+      <div class="maint-title">Hesabın Askıya Alındı</div>
+      <div class="maint-msg" id="banMessage"></div>
+      <button class="ob-btn" id="banLogoutBtn" style="margin-top:18px;">Çıkış Yap</button>
+    </div>
+  </div>
+
   <div id="toast"></div>
 </div>
 
@@ -1000,12 +1047,29 @@ function subscribeOwnUser(){
   if(unsubOwnUser) unsubOwnUser();
   unsubOwnUser = db.collection("users").doc(myUid).onSnapshot(doc=>{
     if(!doc.exists) return;
-    hydrateProfileFromDoc(doc.data());
+    const data = doc.data();
+    hydrateProfileFromDoc(data);
     persistAccount();
     const profileTab = document.getElementById("tab-profile");
     if(profileTab && profileTab.classList.contains("active")) renderProfile();
+
+    // Şikayet üzerine yönetici (bakim.js "banla" komutuyla) hesabı askıya
+    // almış olabilir — bannedUntil geçmiş bir tarihe dönene kadar canlı
+    // olarak (anında, uygulama kapatılıp açılmadan) engelle.
+    const bannedUntilMs = data.bannedUntil && data.bannedUntil.toMillis ? data.bannedUntil.toMillis() : 0;
+    const banOverlay = document.getElementById("banOverlay");
+    if(bannedUntilMs && bannedUntilMs > Date.now()){
+      const untilStr = new Date(bannedUntilMs).toLocaleDateString("tr-TR");
+      document.getElementById("banMessage").textContent =
+        `Hesabın ${untilStr} tarihine kadar askıya alındı.` +
+        (data.banReason ? `\nSebep: ${data.banReason}` : "");
+      banOverlay.classList.add("show");
+    } else {
+      banOverlay.classList.remove("show");
+    }
   }, err=>{ console.error("own user listener error", err); });
 }
+document.getElementById("banLogoutBtn").addEventListener("click", doLogout);
 
 /* Real cross-device video feed: every post ever created by every user, newest first. */
 /* Ham Firestore post belgesini, postNode()'un beklediği tam şekle çevirir.
@@ -1299,8 +1363,12 @@ function postNode(p){
       err.textContent = "Bu video oynatılamıyor. Telefon videoları genelde MP4 (H.264) olmalı — HEVC/MOV formatı bazı tarayıcılarda açılmayabilir.";
       el.appendChild(err);
     });
+    const pauseIcon = document.createElement("div");
+    pauseIcon.className = "vid-pause-icon";
+    pauseIcon.innerHTML = ICONS.play;
     vid.addEventListener("click", ()=>{
-      if(vid.paused){ vid.play().catch(()=>{}); } else { vid.pause(); }
+      if(vid.paused){ vid.play().catch(()=>{}); pauseIcon.classList.remove("show"); }
+      else { vid.pause(); pauseIcon.classList.add("show"); }
     });
     const blurBg = document.createElement("div");
     blurBg.className = "post-blur-bg";
@@ -1322,6 +1390,7 @@ function postNode(p){
     el.insertBefore(vid, el.firstChild);
     el.insertBefore(blurBg, vid);
     el.appendChild(spinner);
+    el.appendChild(pauseIcon);
     vid.src = p.videoURL;
     vid.load();
 
@@ -1338,6 +1407,19 @@ function postNode(p){
     const commentBtn = el.querySelector('[data-act="comment"]');
     if(commentBtn) commentBtn.insertAdjacentElement("afterend", muteBtn);
     else el.querySelector(".actions").appendChild(muteBtn);
+
+    if(!isOwnPost){
+      const reportBtn = document.createElement("button");
+      reportBtn.className = "post-more-btn";
+      reportBtn.type = "button";
+      reportBtn.title = "Şikayet Et";
+      reportBtn.innerHTML = "⋯";
+      reportBtn.addEventListener("click", (ev)=>{
+        ev.stopPropagation();
+        openReportSheet(p.id);
+      });
+      el.appendChild(reportBtn);
+    }
   }
   if(p.textOverlays && p.textOverlays.length){
     const layer = document.createElement("div");
@@ -1586,6 +1668,45 @@ function submitComment(){
   document.querySelectorAll(`.post[data-id="${p.id}"] [data-act="comment"] span`).forEach(s=> s.textContent = p.comments.length);
   db.collection("posts").doc(String(p.id)).update({comments: FieldValue.arrayUnion(comment)}).catch(err=>console.error(err));
 }
+
+/* ===================== ŞİKAYET ET =====================
+   Bir kullanıcı bir sebep seçer seçmez rapor gönderilir (ekstra "gönder"
+   adımı yok — sürtünmeyi azaltır). Rapor sadece kaydedilir; hesabı askıya
+   almak yönetici tarafında (bakim.js "banla" komutu) elle yapılır — otomatik
+   ban yok, yanlış/kötü niyetli şikayetlerin birini anında banlamasını
+   istemiyoruz. */
+let activeReportPostId = null;
+function openReportSheet(postId){
+  activeReportPostId = postId;
+  document.getElementById("reportOverlay").classList.add("show");
+}
+function closeReportSheet(){
+  document.getElementById("reportOverlay").classList.remove("show");
+  activeReportPostId = null;
+}
+document.getElementById("reportCancel").addEventListener("click", closeReportSheet);
+document.getElementById("reportOverlay").addEventListener("click", (e)=>{
+  if(e.target.id === "reportOverlay") closeReportSheet();
+});
+document.querySelectorAll(".report-reason-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const postId = activeReportPostId;
+    const p = findPost(postId);
+    const reason = btn.dataset.reason;
+    closeReportSheet();
+    if(!p) return;
+    db.collection("reports").add({
+      postId: String(postId), reportedUid: p.uid || null, reportedUsername: p.user || null,
+      reporterUid: myUid, reporterUsername: state.profile.user,
+      reason, createdAt: FieldValue.serverTimestamp()
+    }).then(()=>{
+      toast("Şikayetin alındı, inceleyeceğiz");
+    }).catch(err=>{
+      console.error("şikayet gönderilemedi", err);
+      toast("Şikayet gönderilemedi, tekrar dene");
+    });
+  });
+});
 
 /* ===================== NAV / TABS ===================== */
 document.querySelectorAll(".nav-btn[data-tab]").forEach(btn=>{
