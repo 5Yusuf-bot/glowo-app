@@ -43,14 +43,14 @@ workflows:
             echo "HATA: www/index.html bulunamadı. GitHub deponda index.html dosyasının (repo kökünde ya da www/ klasöründe) var olduğundan emin ol."
             exit 1
           fi
-      - name: Uygulama ikonu ve açılış ekranını oluştur
-        script: |
-          npm install @capacitor/assets --save-dev
-          npx capacitor-assets generate --iconBackgroundColor '#0a0a0d' --splashBackgroundColor '#0a0a0d'
       - name: iOS platformunu ekle/güncelle
         script: |
           npx cap add ios || true
           npx cap sync ios
+      - name: Uygulama ikonu ve açılış ekranını oluştur
+        script: |
+          npm install @capacitor/assets --save-dev
+          npx capacitor-assets generate --ios --iconBackgroundColor '#0a0a0d' --iconBackgroundColorDark '#0a0a0d' --splashBackgroundColor '#0a0a0d' --splashBackgroundColorDark '#0a0a0d'
       - name: CocoaPods kurulumu
         script: |
           cd ios/App && pod install
@@ -115,21 +115,30 @@ workflows:
             echo "HATA: www/index.html bulunamadı. GitHub deponda index.html dosyasının (repo kökünde ya da www/ klasöründe) var olduğundan emin ol."
             exit 1
           fi
-      - name: Uygulama ikonu ve açılış ekranını oluştur
-        script: |
-          npm install @capacitor/assets --save-dev
-          npx capacitor-assets generate --iconBackgroundColor '#0a0a0d' --splashBackgroundColor '#0a0a0d'
       - name: Android platformunu ekle/güncelle
         script: |
           npx cap add android || true
           npx cap sync android
+      - name: Uygulama ikonu ve açılış ekranını oluştur
+        script: |
+          npm install @capacitor/assets --save-dev
+          npx capacitor-assets generate --android --iconBackgroundColor '#0a0a0d' --iconBackgroundColorDark '#0a0a0d' --splashBackgroundColor '#0a0a0d' --splashBackgroundColorDark '#0a0a0d'
       - name: İmzalama anahtarı (keystore) oluştur
         script: |
-          keytool -genkeypair -v \
-            -keystore $CM_BUILD_DIR/glowo-release-key.jks \
-            -alias "$KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" \
-            -dname "CN=Glowo, OU=Glowo, O=Glowo, L=Istanbul, S=Istanbul, C=TR"
+          if [ -f glowo-release-key.jks ]; then
+            echo "Depoda mevcut bir imzalama anahtarı bulundu, o kullanılıyor (güncellemeler için ŞART)."
+            cp -f glowo-release-key.jks "$CM_BUILD_DIR/glowo-release-key.jks"
+          else
+            echo "Depoda anahtar yok, yeni bir tane üretiliyor. UYARI: bu APK'yı yayınladıktan"
+            echo "sonra bu build'in çıktısındaki glowo-release-key.jks dosyasını indirip"
+            echo "GitHub deposunun köküne ekle — yoksa bir sonraki güncelleme farklı bir"
+            echo "anahtarla imzalanır ve mağazalar güncellemeyi reddeder."
+            keytool -genkeypair -v \
+              -keystore "$CM_BUILD_DIR/glowo-release-key.jks" \
+              -alias "$KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" \
+              -dname "CN=Glowo, OU=Glowo, O=Glowo, L=Istanbul, S=Istanbul, C=TR"
+          fi
       - name: Gradle'a imzalama ayarlarını ekle
         script: |
           cat >> android/app/build.gradle << EOF
