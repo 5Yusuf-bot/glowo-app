@@ -127,6 +127,62 @@ workflows:
         script: |
           npm install @capacitor/assets --save-dev
           npx capacitor-assets generate --android --iconBackgroundColor '#0a0a0d' --iconBackgroundColorDark '#0a0a0d' --splashBackgroundColor '#0a0a0d' --splashBackgroundColorDark '#0a0a0d'
+      - name: İkon dosyalarını yerleştir
+        script: |
+          # capacitor-assets bazen ikonu doğru üretmiyor / stok ikonu bırakıyor.
+          # Bu adım, elle hazırlanmış Glowo ikon dosyalarını (repo köküne
+          # yüklenmiş düz dosyalar) doğru Android klasörlerine kopyalayıp
+          # capacitor-assets'in ürettiği ikonların ÜZERİNE yazıyor. Böylece
+          # açılış ekranı (splash) capacitor-assets'ten kalıyor, ama ikon
+          # kesin olarak bizim ürettiğimiz Glowo logosu oluyor.
+          mkdir -p android/app/src/main/res/mipmap-anydpi-v26
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+          mkdir -p android/app/src/main/res/values
+
+          MISSING=0
+
+          copy_icon () {
+            if [ -f "$1" ]; then
+              cp -f "$1" "$2"
+            else
+              echo "UYARI: $1 bulunamadı, ikon dosyası eksik olabilir."
+              MISSING=1
+            fi
+          }
+
+          copy_icon icon_mdpi.png   android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          copy_icon icon_hdpi.png   android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          copy_icon icon_xhdpi.png  android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          copy_icon icon_xxhdpi.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          copy_icon icon_xxxhdpi.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+
+          copy_icon icon_round_mdpi.png   android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+          copy_icon icon_round_hdpi.png   android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+          copy_icon icon_round_xhdpi.png  android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+          copy_icon icon_round_xxhdpi.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+          copy_icon icon_round_xxxhdpi.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+
+          copy_icon icon_fg_mdpi.png   android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png
+          copy_icon icon_fg_hdpi.png   android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png
+          copy_icon icon_fg_xhdpi.png  android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png
+          copy_icon icon_fg_xxhdpi.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png
+          copy_icon icon_fg_xxxhdpi.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png
+
+          copy_icon icon_adaptive.xml       android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          copy_icon icon_adaptive_round.xml android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+          copy_icon icon_bg_color.xml       android/app/src/main/res/values/ic_launcher_background.xml
+
+          if [ "$MISSING" = "1" ]; then
+            echo "HATA: Bazı Glowo ikon dosyaları GitHub deposunda bulunamadı."
+            echo "glowo_icon_dosyalari.zip içindeki 18 dosyanın tamamının repo"
+            echo "köküne (düz, klasörsüz) yüklendiğinden emin ol."
+            exit 1
+          fi
+          echo "Glowo ikon dosyaları başarıyla yerleştirildi."
       - name: İmzalama anahtarı (keystore) oluştur
         script: |
           if [ -f "$CM_BUILD_DIR/glowo-release-key.jks" ]; then
