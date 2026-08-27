@@ -36,6 +36,8 @@ workflows:
           [ -f glowo_icon_512.png ] && cp -f glowo_icon_512.png www/glowo_icon_512.png
           [ -f manifest.json ] && cp -f manifest.json www/manifest.json
           [ -f icon.png ] && cp -f icon.png resources/icon.png
+          [ -f icon.png ] && cp -f icon.png resources/logo.png
+          [ -f icon.png ] && cp -f icon.png resources/icon-only.png
           [ -f splash.png ] && cp -f splash.png resources/splash.png
           [ -f splash_dark.png ] && cp -f splash_dark.png resources/splash_dark.png
           echo "--- www içeriği ---"; ls -la www
@@ -108,6 +110,8 @@ workflows:
           [ -f glowo_icon_512.png ] && cp -f glowo_icon_512.png www/glowo_icon_512.png
           [ -f manifest.json ] && cp -f manifest.json www/manifest.json
           [ -f icon.png ] && cp -f icon.png resources/icon.png
+          [ -f icon.png ] && cp -f icon.png resources/logo.png
+          [ -f icon.png ] && cp -f icon.png resources/icon-only.png
           [ -f splash.png ] && cp -f splash.png resources/splash.png
           [ -f splash_dark.png ] && cp -f splash_dark.png resources/splash_dark.png
           echo "--- www içeriği ---"; ls -la www
@@ -187,6 +191,8 @@ workflows:
           [ -f glowo_icon_512.png ] && cp -f glowo_icon_512.png www/glowo_icon_512.png
           [ -f manifest.json ] && cp -f manifest.json www/manifest.json
           [ -f icon.png ] && cp -f icon.png resources/icon.png
+          [ -f icon.png ] && cp -f icon.png resources/logo.png
+          [ -f icon.png ] && cp -f icon.png resources/icon-only.png
           [ -f splash.png ] && cp -f splash.png resources/splash.png
           [ -f splash_dark.png ] && cp -f splash_dark.png resources/splash_dark.png
           echo "--- www içeriği ---"; ls -la www
