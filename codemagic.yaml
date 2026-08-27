@@ -129,9 +129,8 @@ workflows:
           npx capacitor-assets generate --android --iconBackgroundColor '#0a0a0d' --iconBackgroundColorDark '#0a0a0d' --splashBackgroundColor '#0a0a0d' --splashBackgroundColorDark '#0a0a0d'
       - name: İmzalama anahtarı (keystore) oluştur
         script: |
-          if [ -f glowo-release-key.jks ]; then
+          if [ -f "$CM_BUILD_DIR/glowo-release-key.jks" ]; then
             echo "Depoda mevcut bir imzalama anahtarı bulundu, o kullanılıyor (güncellemeler için ŞART)."
-            cp -f glowo-release-key.jks "$CM_BUILD_DIR/glowo-release-key.jks"
           else
             echo "Depoda anahtar yok, yeni bir tane üretiliyor. UYARI: bu APK'yı yayınladıktan"
             echo "sonra bu build'in çıktısındaki glowo-release-key.jks dosyasını indirip"
