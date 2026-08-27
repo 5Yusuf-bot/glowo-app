@@ -151,11 +151,6 @@
   }
   .vid-pause-icon.show{ display:flex; }
   .vid-pause-icon svg{ width:30px; height:30px; color:#fff; margin-left:3px; }
-  .post-more-btn{
-    position:absolute; top:14px; right:12px; z-index:3; width:34px; height:34px; border-radius:50%;
-    background:rgba(0,0,0,.4); border:none; color:#fff; font-size:20px; font-weight:700; line-height:1;
-    display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0 0 4px;
-  }
   .post-body{ position:relative; z-index:2; width:100%; display:flex; align-items:flex-end; padding:14px 10px 22px 14px; gap:10px;}
   .post-info{ flex:1; min-width:0; color:#fff;}
   .post-info .uname{ font-weight:700; font-size:15.5px; display:flex; align-items:center; gap:8px;}
@@ -851,10 +846,11 @@
       <h3>İçeriği Şikayet Et</h3>
       <div style="font-size:13px;color:var(--text-faint);margin-bottom:4px;">Neden şikayet ediyorsun?</div>
       <div class="report-reason-list" id="reportReasonList">
-        <button class="report-reason-btn" data-reason="Uygunsuz / müstehcen içerik">Uygunsuz / müstehcen içerik</button>
+        <button class="report-reason-btn" data-reason="Cinsel içerik / müstehcenlik">Cinsel içerik / müstehcenlik</button>
+        <button class="report-reason-btn" data-reason="Çocuk güvenliği">Çocuk güvenliği</button>
+        <button class="report-reason-btn" data-reason="Şiddet / tehlikeli içerik">Şiddet / tehlikeli içerik</button>
         <button class="report-reason-btn" data-reason="Nefret söylemi / taciz">Nefret söylemi / taciz</button>
-        <button class="report-reason-btn" data-reason="Şiddet">Şiddet</button>
-        <button class="report-reason-btn" data-reason="Spam">Spam</button>
+        <button class="report-reason-btn" data-reason="Spam / yanıltıcı içerik">Spam / yanıltıcı içerik</button>
         <button class="report-reason-btn" data-reason="Diğer">Diğer</button>
       </div>
       <div class="modal-btns"><button class="btn-ghost" id="reportCancel" style="width:100%;">Vazgeç</button></div>
@@ -909,6 +905,60 @@ db.collection("settings").doc("app").onSnapshot(doc=>{
     overlay.classList.remove("show");
   }
 }, err=>console.error("bakım modu dinleyicisi hatası", err));
+
+/* ---- Hesap + cihaz banı: "banla" komutu hem hesabı hem de o hesabın
+   kullandığı telefon(lar)ı banlar — böylece biri banlanınca aynı telefondan
+   yeni bir hesap açıp devam edemez. İkisi ayrı ayrı kontrol edilip aynı
+   ekranda birleştiriliyor (biri kalkınca diğerini kapatmasın diye). ---- */
+let deviceBanInfo = null, accountBanInfo = null;
+function refreshBanOverlay(){
+  const info = accountBanInfo || deviceBanInfo;
+  const overlay = document.getElementById("banOverlay");
+  if(info){
+    const untilStr = new Date(info.until).toLocaleDateString("tr-TR");
+    const scope = accountBanInfo ? "Hesabın" : "Bu cihaz";
+    document.getElementById("banMessage").textContent =
+      `${scope} ${untilStr} tarihine kadar askıya alındı.` + (info.reason ? `\nSebep: ${info.reason}` : "");
+    overlay.classList.add("show");
+  } else {
+    overlay.classList.remove("show");
+  }
+}
+
+/* Cihaz kimliği: Capacitor'ın "Device" eklentisi kuruluysa (native APK)
+   uygulama silinip yeniden kurulsa bile aynı kalan bir kimlik verir. Eklenti
+   yoksa (örn. düz tarayıcıda test ederken) cihaza has, yerelde saklanan
+   rastgele bir kimlikle idare ediyoruz — bu durumda tarayıcı verisi
+   temizlenirse kimlik de sıfırlanır, ama bu sadece bir yedek durum. */
+async function getDeviceId(){
+  try{
+    if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Device){
+      const info = await window.Capacitor.Plugins.Device.getId();
+      if(info && info.identifier) return info.identifier;
+    }
+  }catch(e){ /* eklenti yoksa sessizce yedek kimliğe geç */ }
+  let fallback = Storage.get("glowo_device_id");
+  if(!fallback){
+    fallback = "web_" + Date.now() + "_" + Math.random().toString(36).slice(2,10);
+    Storage.set("glowo_device_id", fallback);
+  }
+  return fallback;
+}
+(async ()=>{
+  try{
+    const deviceId = await getDeviceId();
+    if(!deviceId) return;
+    const doc = await db.collection("bannedDevices").doc(deviceId).get();
+    if(doc.exists){
+      const d = doc.data();
+      const untilMs = d.bannedUntil && d.bannedUntil.toMillis ? d.bannedUntil.toMillis() : 0;
+      if(untilMs > Date.now()){
+        deviceBanInfo = {until: untilMs, reason: d.reason || ""};
+        refreshBanOverlay();
+      }
+    }
+  }catch(e){ console.error("cihaz ban kontrolü başarısız", e); }
+})();
 
 /* Kalıcı oturum: sekmeyi/tarayıcıyı kapatıp açsan bile hangi hesaptaysan
    o hesapta kalırsın — bu zaten tarayıcıların varsayılanı ama emin olmak
@@ -975,7 +1025,8 @@ live:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2
 type:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6h14M12 6v13M9 19h6"/></svg>`,
 endcall:`<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 15.5c-3.2 0-5.9-1-8.2-2.9a1.6 1.6 0 0 1-.2-2.3l2-2.2a1.4 1.4 0 0 1 1.9-.2c.8.6 1.7 1 2.6 1.3.5.2.9.7.9 1.3v1.7c1 .2 2 .2 3 0v-1.7c0-.6.3-1.1.9-1.3.9-.3 1.8-.7 2.6-1.3a1.4 1.4 0 0 1 1.9.2l2 2.2c.6.7.6 1.7-.2 2.3-2.3 1.9-5 2.9-8.2 2.9Z" transform="rotate(135 12 12)"/></svg>`,
 volumeOn:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a9 9 0 0 1 0 12"/></svg>`,
-volumeOff:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>`
+volumeOff:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>`,
+flag:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18"/><path d="M5 4h13l-3 4.5L18 13H5"/></svg>`
 };
 
 /* ===================== DATA ===================== */
@@ -1044,6 +1095,11 @@ function subscribeOwnUser(){
   // Hesabın "son aktif olduğu" zamanı güncelle — 1 aydır girilmeyen
   // hesapları tespit edip temizlemek için (bkz. bakim.js "temizle" komutu).
   db.collection("users").doc(myUid).update({lastActive: FieldValue.serverTimestamp()}).catch(()=>{});
+  // Bu cihazın kimliğini hesaba kaydet — biri banlanınca yönetici bu listeye
+  // bakıp aynı telefonu da banlayabiliyor (bkz. bakim.js "banla" komutu).
+  getDeviceId().then(deviceId=>{
+    if(deviceId) db.collection("users").doc(myUid).update({deviceIds: FieldValue.arrayUnion(deviceId)}).catch(()=>{});
+  });
   if(unsubOwnUser) unsubOwnUser();
   unsubOwnUser = db.collection("users").doc(myUid).onSnapshot(doc=>{
     if(!doc.exists) return;
@@ -1057,16 +1113,10 @@ function subscribeOwnUser(){
     // almış olabilir — bannedUntil geçmiş bir tarihe dönene kadar canlı
     // olarak (anında, uygulama kapatılıp açılmadan) engelle.
     const bannedUntilMs = data.bannedUntil && data.bannedUntil.toMillis ? data.bannedUntil.toMillis() : 0;
-    const banOverlay = document.getElementById("banOverlay");
-    if(bannedUntilMs && bannedUntilMs > Date.now()){
-      const untilStr = new Date(bannedUntilMs).toLocaleDateString("tr-TR");
-      document.getElementById("banMessage").textContent =
-        `Hesabın ${untilStr} tarihine kadar askıya alındı.` +
-        (data.banReason ? `\nSebep: ${data.banReason}` : "");
-      banOverlay.classList.add("show");
-    } else {
-      banOverlay.classList.remove("show");
-    }
+    accountBanInfo = (bannedUntilMs && bannedUntilMs > Date.now())
+      ? {until: bannedUntilMs, reason: data.banReason || ""}
+      : null;
+    refreshBanOverlay();
   }, err=>{ console.error("own user listener error", err); });
 }
 document.getElementById("banLogoutBtn").addEventListener("click", doLogout);
@@ -1410,15 +1460,16 @@ function postNode(p){
 
     if(!isOwnPost){
       const reportBtn = document.createElement("button");
-      reportBtn.className = "post-more-btn";
+      reportBtn.className = "act-btn";
       reportBtn.type = "button";
-      reportBtn.title = "Şikayet Et";
-      reportBtn.innerHTML = "⋯";
+      reportBtn.innerHTML = ICONS.flag + `<span>Şikayet</span>`;
       reportBtn.addEventListener("click", (ev)=>{
         ev.stopPropagation();
         openReportSheet(p.id);
       });
-      el.appendChild(reportBtn);
+      const disc = el.querySelector(".disc");
+      if(disc) disc.insertAdjacentElement("beforebegin", reportBtn);
+      else el.querySelector(".actions").appendChild(reportBtn);
     }
   }
   if(p.textOverlays && p.textOverlays.length){
