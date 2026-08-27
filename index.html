@@ -2738,10 +2738,28 @@ document.getElementById("submitPost").addEventListener("click", async ()=>{
     const cloudForm = new FormData();
     cloudForm.append("file", fileToSave);
     cloudForm.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-    const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`, {
-      method: "POST",
-      body: cloudForm
-    });
+    // Yükleme bazen ağ/bağlantı sorunları yüzünden sonsuza kadar "Yükleniyor..."
+    // durumunda takılı kalabiliyordu (fetch'in kendi zaman aşımı yok). Artık
+    // 2 dakika içinde bitmezse otomatik iptal edilip hata mesajı gösteriliyor,
+    // buton tekrar tıklanabilir hale geliyor.
+    const uploadTimeoutMs = 120000;
+    const uploadController = new AbortController();
+    const uploadTimeoutId = setTimeout(()=> uploadController.abort(), uploadTimeoutMs);
+    let cloudRes;
+    try{
+      cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`, {
+        method: "POST",
+        body: cloudForm,
+        signal: uploadController.signal
+      });
+    }catch(fetchErr){
+      if(fetchErr && fetchErr.name === "AbortError"){
+        throw new Error("Yükleme çok uzun sürdü ve zaman aşımına uğradı. İnternet bağlantını kontrol edip tekrar dene (video çok büyükse daha kısa/küçük bir video dene).");
+      }
+      throw fetchErr;
+    }finally{
+      clearTimeout(uploadTimeoutId);
+    }
     const cloudData = await cloudRes.json();
     if(!cloudRes.ok || !cloudData.secure_url){
       console.error("Cloudinary yükleme hatası:", cloudData);
