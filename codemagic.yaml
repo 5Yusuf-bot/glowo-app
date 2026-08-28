@@ -227,6 +227,162 @@ workflows:
       - android/app/build/outputs/apk/release/*.apk
       - glowo-release-key.jks
 
+  # ============================================================
+  # ANDROID - Play Store için AAB (Android App Bundle) üretimi.
+  # Play Store artık .apk KABUL ETMİYOR, sadece .aab. Bu iş akışı
+  # website/APKPure için kullanılan (android-release) İLE AYNI
+  # imzalama anahtarını (glowo-release-key.jks) kullanır — böylece
+  # tek bir kimlikle imzalanmış oluyoruz. Ayrıca Play Store'un yeni
+  # kuralı gereği (31 Ağustos 2026'dan itibaren) hedef Android
+  # sürümünü Android 16 (API 36) olacak şekilde zorluyor - bu SADECE
+  # bu workflow'u etkiler, android-release (website APK'sı) eskisi
+  # gibi kalır, dokunulmadı.
+  # ============================================================
+  android-playstore:
+    name: Glowo - Android Release (AAB - Play Store)
+    max_build_duration: 60
+    environment:
+      node: 20.17.0
+      vars:
+        PACKAGE_NAME: "com.yusuf.glowo"
+        KEYSTORE_PASSWORD: "GlowoApp2026!"
+        KEY_ALIAS: "glowo"
+    scripts:
+      - name: Bağımlılıkları kur
+        script: npm install
+      - name: Web klasörünü hazırla
+        script: |
+          mkdir -p www resources
+          [ -f index.html ] && cp -f index.html www/index.html
+          [ -f glowo_icon_192.png ] && cp -f glowo_icon_192.png www/glowo_icon_192.png
+          [ -f glowo_icon_512.png ] && cp -f glowo_icon_512.png www/glowo_icon_512.png
+          [ -f manifest.json ] && cp -f manifest.json www/manifest.json
+          [ -f icon.png ] && cp -f icon.png resources/icon.png
+          [ -f icon.png ] && cp -f icon.png resources/logo.png
+          [ -f icon.png ] && cp -f icon.png resources/icon-only.png
+          [ -f splash.png ] && cp -f splash.png resources/splash.png
+          [ -f splash_dark.png ] && cp -f splash_dark.png resources/splash_dark.png
+          echo "--- www içeriği ---"; ls -la www
+          if [ ! -f www/index.html ]; then
+            echo "HATA: www/index.html bulunamadı. GitHub deponda index.html dosyasının (repo kökünde ya da www/ klasöründe) var olduğundan emin ol."
+            exit 1
+          fi
+      - name: Android platformunu ekle/güncelle
+        script: |
+          npx cap add android || true
+          npx cap sync android
+      - name: Uygulama ikonu ve açılış ekranını oluştur
+        script: |
+          npm install @capacitor/assets --save-dev
+          npx capacitor-assets generate --android --iconBackgroundColor '#0a0a0d' --iconBackgroundColorDark '#0a0a0d' --splashBackgroundColor '#0a0a0d' --splashBackgroundColorDark '#0a0a0d'
+      - name: İkon dosyalarını yerleştir
+        script: |
+          mkdir -p android/app/src/main/res/mipmap-anydpi-v26
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+          mkdir -p android/app/src/main/res/values
+
+          MISSING=0
+
+          copy_icon () {
+            if [ -f "$1" ]; then
+              cp -f "$1" "$2"
+            else
+              echo "UYARI: $1 bulunamadı, ikon dosyası eksik olabilir."
+              MISSING=1
+            fi
+          }
+
+          copy_icon icon_mdpi.png   android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          copy_icon icon_hdpi.png   android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          copy_icon icon_xhdpi.png  android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          copy_icon icon_xxhdpi.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          copy_icon icon_xxxhdpi.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+
+          copy_icon icon_round_mdpi.png   android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+          copy_icon icon_round_hdpi.png   android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+          copy_icon icon_round_xhdpi.png  android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+          copy_icon icon_round_xxhdpi.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+          copy_icon icon_round_xxxhdpi.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+
+          copy_icon icon_fg_mdpi.png   android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png
+          copy_icon icon_fg_hdpi.png   android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png
+          copy_icon icon_fg_xhdpi.png  android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png
+          copy_icon icon_fg_xxhdpi.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png
+          copy_icon icon_fg_xxxhdpi.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png
+
+          copy_icon icon_adaptive.xml       android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          copy_icon icon_adaptive_round.xml android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+          copy_icon icon_bg_color.xml       android/app/src/main/res/values/ic_launcher_background.xml
+
+          if [ "$MISSING" = "1" ]; then
+            echo "HATA: Bazı Glowo ikon dosyaları GitHub deposunda bulunamadı."
+            echo "glowo_icon_dosyalari.zip içindeki 18 dosyanın tamamının repo"
+            echo "köküne (düz, klasörsüz) yüklendiğinden emin ol."
+            exit 1
+          fi
+          echo "Glowo ikon dosyaları başarıyla yerleştirildi."
+      - name: Hedef Android sürümünü Android 16 (API 36) yap
+        script: |
+          # Play Store, 31 Ağustos 2026'dan itibaren yeni/güncellenen
+          # uygulamaların en az API 36 hedeflemesini zorunlu kılıyor.
+          # Capacitor'ın varsayılan android/variables.gradle dosyasındaki
+          # eski değerlerin üzerine yazıyoruz.
+          sed -i 's/compileSdkVersion = .*/compileSdkVersion = 36/' android/variables.gradle
+          sed -i 's/targetSdkVersion = .*/targetSdkVersion = 36/' android/variables.gradle
+          echo "--- android/variables.gradle ---"
+          cat android/variables.gradle
+      - name: Android SDK 36 platformunu kur
+        script: |
+          yes | sdkmanager --install "platforms;android-36" "build-tools;36.0.0" || true
+      - name: İmzalama anahtarı (keystore) oluştur
+        script: |
+          if [ -f "$CM_BUILD_DIR/glowo-release-key.jks" ]; then
+            echo "Depoda mevcut bir imzalama anahtarı bulundu, o kullanılıyor (android-release ile AYNI anahtar - ŞART)."
+          else
+            echo "Depoda anahtar yok, yeni bir tane üretiliyor. UYARI: bu, android-release workflow'unun"
+            echo "kullandığı anahtardan FARKLI olabilir. Play Store için ilk kez yüklüyorsan sorun değil,"
+            echo "ama sonra bu build'in çıktısındaki glowo-release-key.jks dosyasını indirip GitHub"
+            echo "deposunun köküne eklemen lazım - yoksa gelecekteki güncellemeler farklı anahtarla"
+            echo "imzalanır ve Play Console güncellemeyi reddeder."
+            keytool -genkeypair -v \
+              -keystore "$CM_BUILD_DIR/glowo-release-key.jks" \
+              -alias "$KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" \
+              -dname "CN=Glowo, OU=Glowo, O=Glowo, L=Istanbul, S=Istanbul, C=TR"
+          fi
+      - name: Gradle'a imzalama ayarlarını ekle
+        script: |
+          cat >> android/app/build.gradle << EOF
+
+          android {
+              signingConfigs {
+                  release {
+                      storeFile file("$CM_BUILD_DIR/glowo-release-key.jks")
+                      storePassword "$KEYSTORE_PASSWORD"
+                      keyAlias "$KEY_ALIAS"
+                      keyPassword "$KEYSTORE_PASSWORD"
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                  }
+              }
+          }
+          EOF
+      - name: Release AAB derle
+        script: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew bundleRelease
+    artifacts:
+      - android/app/build/outputs/bundle/release/*.aab
+      - glowo-release-key.jks
+
   # Daha hızlı/basit bir test derlemesi istersen (imzasız/debug APK,
   # kendi telefonuna kurup denemek için yeterli, ama çoğu mağaza
   # KABUL ETMEZ - sadece hızlı test amaçlı):
