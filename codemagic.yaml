@@ -362,12 +362,19 @@ workflows:
           # ve targetSdkVersion'ı DOĞRUDAN app/build.gradle'a ikinci bir
           # android{} bloğu olarak ekliyoruz - Gradle bu tür basit atamalarda
           # dosyadaki SON değeri kullanır, yani bu kesin olarak kazanır.
+          #
+          # versionCode da aynı şekilde $BUILD_NUMBER'a (Codemagic'in bu
+          # workflow için otomatik artan build numarası, iOS tarafında da
+          # kullanılıyor) bağlanıyor - Play Console her yüklemede bir
+          # ÖNCEKİNDEN YÜKSEK bir sürüm kodu istiyor, Capacitor'ın sabit "1"
+          # değeri ikinci yüklemede çakışıyordu.
           cat >> android/app/build.gradle << EOF
 
           android {
               compileSdkVersion 36
               defaultConfig {
                   targetSdkVersion 36
+                  versionCode $BUILD_NUMBER
               }
               signingConfigs {
                   release {
