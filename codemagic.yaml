@@ -354,11 +354,21 @@ workflows:
               -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" \
               -dname "CN=Glowo, OU=Glowo, O=Glowo, L=Istanbul, S=Istanbul, C=TR"
           fi
-      - name: Gradle'a imzalama ayarlarını ekle
+      - name: Gradle'a imzalama ve hedef API ayarlarını ekle
         script: |
+          # variables.gradle üzerinden sed ile yapılan düzeltme Capacitor'ın
+          # ürettiği dosyanın tam biçimine bağlı olduğu için garanti değildi
+          # (bir önceki build'de hâlâ API 34 çıktı verdi). Burada compileSdkVersion
+          # ve targetSdkVersion'ı DOĞRUDAN app/build.gradle'a ikinci bir
+          # android{} bloğu olarak ekliyoruz - Gradle bu tür basit atamalarda
+          # dosyadaki SON değeri kullanır, yani bu kesin olarak kazanır.
           cat >> android/app/build.gradle << EOF
 
           android {
+              compileSdkVersion 36
+              defaultConfig {
+                  targetSdkVersion 36
+              }
               signingConfigs {
                   release {
                       storeFile file("$CM_BUILD_DIR/glowo-release-key.jks")
@@ -374,6 +384,8 @@ workflows:
               }
           }
           EOF
+          echo "--- android/app/build.gradle (son hali) ---"
+          cat android/app/build.gradle
       - name: Release AAB derle
         script: |
           cd android
