@@ -401,6 +401,7 @@
   #settingsView{ position:absolute; inset:0; background:var(--bg); z-index:35; display:none; flex-direction:column; }
   #settingsView.show{ display:flex; }
   #settingsView .chat-header{ padding-top:30px; }
+  #otherProfileView .chat-header{ padding-top:30px; }
   .settings-scroll{ flex:1; overflow-y:auto; padding-bottom:24px; }
   .settings-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px 16px; border-bottom:1px solid var(--border);}
   .settings-row .srow-label{ font-size:14px; font-weight:600; }
@@ -1349,6 +1350,25 @@ function avatarCircle(size, colorOrGrad, text, photoUrl){
     return `<div class="favatar" style="width:${size}px;height:${size}px;background-image:url('${photoUrl}');background-size:cover;background-position:center;"></div>`;
   }
   return `<div class="favatar" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.36)}px;background:${colorOrGrad}">${text}</div>`;
+}
+
+/* Cloudinary'ye yüklenen video URL'sinden videonun İLK karesini JPG olarak
+   üretir (Cloudinary bunu otomatik yapıyor, ayrı bir yükleme gerekmiyor) —
+   profil ızgarasında hangi videonun hangisi olduğu düz renkli kutular yerine
+   gerçek video karesiyle görülsün diye kullanılıyor. */
+function videoThumbUrl(url){
+  if(!url) return null;
+  try{
+    let out = url.replace("/video/upload/", "/video/upload/so_0/");
+    out = out.replace(/\.[a-zA-Z0-9]+(\?[^#]*)?$/, ".jpg");
+    return out;
+  }catch(e){ return null; }
+}
+/* Profil ızgarasındaki bir hücrenin inline stilini üretir: video varsa ilk
+   karesini kapak resmi yapar (yüklenemezse arkadaki renk zaten görünür). */
+function gridCellStyle(p){
+  const thumb = p.videoURL ? videoThumbUrl(p.videoURL) : null;
+  return `background:${p.color};${thumb?`background-image:url('${thumb}');background-size:cover;background-position:center;`:""}${p.videoURL?"cursor:pointer;":""}`;
 }
 
 /* ===================== ICON INJECTION (static UI) ===================== */
@@ -2382,7 +2402,7 @@ async function openOtherProfile(friend){
         <div>Videolarını ve mesajlarını görmek için takip et.</div>
       </div>` :
       `<div class="pgrid" id="otherPgrid">${posts.length ? posts.map(p=>`
-        <div class="cell" data-id="${p.id}" style="background:${p.color};${p.videoURL?"cursor:pointer;":""}">
+        <div class="cell" data-id="${p.id}" style="${gridCellStyle(p)}">
           <div class="plays">${ICONS.play.replace('viewBox="0 0 24 24"','viewBox="0 0 24 24" width="12" height="12"')} ${fmt(p.likes||0)}</div>
         </div>`).join("") :
       `<div style="grid-column:1/-1;text-align:center;color:var(--text-faint);padding:30px 10px;font-size:13.5px;">Henüz video yok</div>`}</div>`}
@@ -2537,7 +2557,7 @@ function renderProfile(){
   const grid = document.getElementById("pgrid");
   const items = pr.ptab==="videos" ? ownPosts : likedPosts;
   grid.innerHTML = items.length ? items.map(p=>`
-      <div class="cell" data-id="${p.id}" style="background:${p.color};${p.videoURL?"cursor:pointer;":""}">
+      <div class="cell" data-id="${p.id}" style="${gridCellStyle(p)}">
         <div class="plays">${ICONS.play.replace('viewBox="0 0 24 24"','viewBox="0 0 24 24" width="12" height="12"')} ${fmt(p.likes)}</div>
       </div>`).join("")
     : `<div style="grid-column:1/-1;text-align:center;color:var(--text-faint);padding:30px 10px;font-size:13.5px;">Henüz video yok</div>`;
