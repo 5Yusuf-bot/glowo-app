@@ -400,6 +400,7 @@
   /* ---------- Settings screen ---------- */
   #settingsView{ position:absolute; inset:0; background:var(--bg); z-index:35; display:none; flex-direction:column; }
   #settingsView.show{ display:flex; }
+  #settingsView .chat-header{ padding-top:30px; }
   .settings-scroll{ flex:1; overflow-y:auto; padding-bottom:24px; }
   .settings-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px 16px; border-bottom:1px solid var(--border);}
   .settings-row .srow-label{ font-size:14px; font-weight:600; }
@@ -1548,6 +1549,19 @@ function setupVideoObserver(){
   }, {threshold:0.6});
   feedEl.querySelectorAll(".post").forEach(p=>observer.observe(p));
 }
+
+/* Aynı anda birden fazla video sesi çalıp "ses karışması" olmasın diye:
+   herhangi bir .post videosu (akış, video görüntüleyici, profil galerisi vs.)
+   oynamaya başladığı an, sahnedeki diğer tüm .post videoları otomatik
+   duraklatılır. 'play' olayı bubble etmediği için capture aşamasında
+   dinliyoruz, böylece tek bir yerden tüm videoları kapsıyor. */
+document.addEventListener("play", function(e){
+  const v = e.target;
+  if(!(v.tagName === "VIDEO" && v.closest(".post"))) return;
+  document.querySelectorAll(".post video").forEach(other=>{
+    if(other !== v && !other.paused) other.pause();
+  });
+}, true);
 
 /* Profil ızgarasından (kendi videolarım / beğenilenler / başka birinin
    profili) açılan videolar state.posts (akış önbelleği) içinde olmayabilir
