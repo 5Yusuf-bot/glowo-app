@@ -567,6 +567,7 @@
       <div class="maint-title">Güncelleme Gerekli</div>
       <div class="maint-msg" id="updateMessage">Uygulamanın en güncel sürümünü yükleyin.</div>
       <button class="overlay-btn" id="updateStoreBtn">Play Store'da Aç</button>
+      <div id="updateCheckBtn" style="margin-top:14px;color:var(--text-dim);font-size:13.5px;font-weight:700;cursor:pointer;text-decoration:underline;">Güncelledim, Kontrol Et</div>
     </div>
   </div>
 
@@ -924,6 +925,25 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script>
+/* ===================== SÜRÜM ===================== */
+/* Bu dosyanın (yani şu an derlenmiş APK/AAB'nin) sürüm numarası. Play Store'a
+   yeni bir sürüm yayınlarken bunu ELLE artır (örn. "1.0.1") — CMD'deki
+   "guncelle" komutu, kullanıcının cihazındaki bu sabitle karşılaştırma
+   yaparak zorunlu güncelleme ekranını gösterip göstermeyeceğine karar verir.
+   Ayarlar > Glowo Hakkında ekranındaki sürüm yazısı da buradan geliyor. */
+const APP_VERSION = "1.0.0";
+/* "1.2.3" gibi iki sürümü karşılaştırır: current >= required ise true döner. */
+function isVersionAtLeast(current, required){
+  const c = String(current||"0").split(".").map(n=>parseInt(n,10)||0);
+  const r = String(required||"0").split(".").map(n=>parseInt(n,10)||0);
+  for(let i=0;i<Math.max(c.length,r.length);i++){
+    const cv = c[i]||0, rv = r[i]||0;
+    if(cv > rv) return true;
+    if(cv < rv) return false;
+  }
+  return true; // eşitse güncel sayılır
+}
+
 /* ===================== FIREBASE ===================== */
 const firebaseConfig = {
   apiKey: "AIzaSyBxfylbKs70AJT4KlKT12Qkp6kZNzbS-JU",
@@ -944,16 +964,25 @@ let myUid = null;
 /* ---- Bakım modu: Windows CMD'den (bakim.js aracıyla) settings/app belgesi
    güncellenince BÜTÜN kullanıcılarda anında (sayfa yenilemeden) bu ekran
    açılır/kapanır — giriş yapmış olsun olmasın herkes için geçerlidir. ---- */
-db.collection("settings").doc("app").onSnapshot(doc=>{
-  const d = doc.exists ? doc.data() : {};
+/* Zorunlu güncelleme kontrolü: CMD'den "guncelle <min sürüm>" ile belirlenen
+   minimum sürümü, bu cihazdaki APK'nın içine gömülü APP_VERSION sabitiyle
+   karşılaştırıyoruz. Bu sayede GERÇEKTEN güncellemiş biri ekranı görmeye
+   devam ETMEZ — sadece hâlâ eski sürümde olanlar görür. "Güncelledim,
+   Kontrol Et" butonu ise Play Store güncellemesi arka planda bitmiş ama
+   uygulama hâlâ açıkken bunu WebView'a yeniden okutmak için sayfayı
+   yeniliyor (yeni sürüm zaten cihaza inmişse APP_VERSION de güncel gelir). */
+let lastAppSettings = {};
+function applyAppSettingsOverlays(){
+  const d = lastAppSettings;
   const overlay = document.getElementById("maintenanceOverlay");
   const updateOverlay = document.getElementById("updateOverlay");
+  const needsUpdate = !!(d.minVersion && !isVersionAtLeast(APP_VERSION, d.minVersion));
   if(d && d.maintenance){
     document.getElementById("maintenanceMessage").textContent =
       d.message || "Glowo şu anda bakımda. Lütfen daha sonra tekrar dene.";
     overlay.classList.add("show");
     updateOverlay.classList.remove("show");
-  } else if(d && d.updateRequired){
+  } else if(needsUpdate){
     overlay.classList.remove("show");
     document.getElementById("updateMessage").textContent =
       d.updateMessage || "Uygulamanın en güncel sürümünü yükleyin.";
@@ -965,6 +994,15 @@ db.collection("settings").doc("app").onSnapshot(doc=>{
     overlay.classList.remove("show");
     updateOverlay.classList.remove("show");
   }
+}
+document.getElementById("updateCheckBtn").addEventListener("click", ()=>{
+  // Play Store güncellemesi cihaza inmişse yeni dosyalarla yeniden açılır;
+  // hâlâ eski sürümdeyse aynı ekranı (aynı gerekçeyle) tekrar gösterir.
+  location.reload();
+});
+db.collection("settings").doc("app").onSnapshot(doc=>{
+  lastAppSettings = doc.exists ? doc.data() : {};
+  applyAppSettingsOverlays();
 }, err=>console.error("bakım modu dinleyicisi hatası", err));
 
 /* ---- Hesap + cihaz banı: "banla" komutu hem hesabı hem de o hesabın
@@ -3484,7 +3522,7 @@ function renderSettings(){
     </div>
     <div class="section-label">Diğer</div>
     <div class="settings-row clickable" id="setHelp"><div class="srow-label">Yardım ve Destek</div></div>
-    <div class="settings-row"><div><div class="srow-label">Glowo Hakkında</div><div class="srow-sub">Sürüm 1.0.0</div></div></div>
+    <div class="settings-row"><div><div class="srow-label">Glowo Hakkında</div><div class="srow-sub">Sürüm ${APP_VERSION}</div></div></div>
     <div class="settings-row clickable" id="setLogout"><div class="srow-label">Çıkış Yap</div></div>
     <div class="settings-row clickable danger" id="setDelete"><div class="srow-label">Hesabı Sil</div></div>
   `;
