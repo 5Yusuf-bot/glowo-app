@@ -612,6 +612,7 @@
         <input class="field-input" id="loginPassword" type="password" placeholder="Şifren">
         <div class="ob-error" id="loginError"></div>
         <button class="ob-btn" id="loginSubmitBtn" style="width:100%;margin-top:20px;">Giriş Yap</button>
+        <div class="ob-switch-link" id="forgotPasswordLink" style="text-align:center;margin-top:12px;font-size:13px;color:var(--text-faint);cursor:pointer;">Şifreni mi unuttun?</div>
         <div class="ob-switch-link" id="obGoRegisterLink" style="text-align:center;margin-top:14px;font-size:13px;color:var(--text-faint);cursor:pointer;">Hesabın yok mu? <span style="color:var(--accent,#8b5cf6);font-weight:600;">Kayıt Ol</span></div>
       </div>
     </div>
@@ -893,6 +894,19 @@
         <button class="report-reason-btn" data-reason="Diğer">Diğer</button>
       </div>
       <div class="modal-btns"><button class="btn-ghost" id="reportCancel" style="width:100%;">Vazgeç</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay center" id="forgotPasswordOverlay">
+    <div class="sheet">
+      <h3>Şifremi Unuttum</h3>
+      <div style="font-size:13px;color:var(--text-faint);margin-bottom:10px;">Kullanıcı adını gir, ekibimiz kimliğini doğruladıktan sonra sana yeni bir şifre iletecek.</div>
+      <div class="field-label">Kullanıcı Adı</div>
+      <input class="field-input" id="forgotPasswordUsername" placeholder="kullaniciadi">
+      <div class="modal-btns">
+        <button class="btn-ghost" id="forgotPasswordCancel">Vazgeç</button>
+        <button class="btn-primary" id="forgotPasswordSend">Gönder</button>
+      </div>
     </div>
   </div>
 
@@ -3708,11 +3722,44 @@ document.getElementById("obPassword2").addEventListener("keydown", e=>{ if(e.key
 
 /* Giriş: mevcut (anonim ya da başka) oturumu bırakıp, kullanıcı adı + şifreyle
    gerçek hesaba geçiyoruz. Bu, "hangi cihazdan olursa olsun kendi hesabına
-   girebilme" isteğini karşılıyor. Bilinen sınırlama: şifreni unutursan kurtarma
-   yolu yok — sahte e-posta gerçek bir adres olmadığı için Firebase'in şifre
-   sıfırlama maili gönderemiyoruz. */
+   girebilme" isteğini karşılıyor. Şifreni unutursan: sahte e-posta gerçek
+   bir adres olmadığı için Firebase'in otomatik şifre sıfırlama maili
+   çalışmıyor — bunun yerine "Şifreni mi unuttun?" linki kullanıcı adını
+   passwordResetRequests koleksiyonuna kaydediyor (giriş yapmadan da
+   gönderilebilir), CMD'den "node bakim.js sifretalepleri" ile görülüp
+   "node bakim.js sifresifirla <kullaniciadi>" ile yeni bir şifre üretilip
+   kullanıcıya elden iletiliyor. */
 document.getElementById("loginSubmitBtn").addEventListener("click", submitLogin);
 document.getElementById("loginPassword").addEventListener("keydown", e=>{ if(e.key==="Enter") submitLogin(); });
+
+function openForgotPasswordSheet(){
+  document.getElementById("forgotPasswordUsername").value = document.getElementById("loginUsername").value.trim().replace(/^@+/,"");
+  document.getElementById("forgotPasswordOverlay").classList.add("show");
+}
+function closeForgotPasswordSheet(){
+  document.getElementById("forgotPasswordOverlay").classList.remove("show");
+}
+document.getElementById("forgotPasswordLink").addEventListener("click", openForgotPasswordSheet);
+document.getElementById("forgotPasswordCancel").addEventListener("click", closeForgotPasswordSheet);
+document.getElementById("forgotPasswordOverlay").addEventListener("click", (e)=>{
+  if(e.target.id === "forgotPasswordOverlay") closeForgotPasswordSheet();
+});
+document.getElementById("forgotPasswordSend").addEventListener("click", ()=>{
+  const username = document.getElementById("forgotPasswordUsername").value.trim().replace(/^@+/,"").replace(/[^a-zA-Z0-9_]/g,"").toLowerCase();
+  if(!username){ toast("Lütfen kullanıcı adını gir"); return; }
+  const sendBtn = document.getElementById("forgotPasswordSend");
+  sendBtn.disabled = true;
+  db.collection("passwordResetRequests").add({
+    username,
+    requestedAt: FieldValue.serverTimestamp()
+  }).then(()=>{
+    closeForgotPasswordSheet();
+    toast("Talebin alındı, ekibimiz sana yeni şifreni iletecek");
+  }).catch(err=>{
+    console.error("şifre sıfırlama talebi gönderilemedi", err);
+    toast("Gönderilemedi, tekrar dene");
+  }).finally(()=>{ sendBtn.disabled = false; });
+});
 async function submitLogin(){
   const username = document.getElementById("loginUsername").value.trim().replace(/^@+/,"").replace(/[^a-zA-Z0-9_]/g,"").toLowerCase();
   const password = document.getElementById("loginPassword").value;
