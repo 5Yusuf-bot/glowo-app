@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <link rel="manifest" href="manifest.json">
 <title>Glowo</title>
 <style>
@@ -19,6 +19,11 @@
     --accent3:#22d3ee;
     --heart:#fe2c55;
     --grad: linear-gradient(135deg, var(--accent1), var(--accent2) 55%, var(--accent3));
+    /* Cihazın gerçek çentik/durum çubuğu yüksekliği (varsa) — bu sayede
+       başlıklar/üst çubuk her telefonda kendi ekranına göre otomatik
+       ayarlanıyor, tek bir cihaza göre elle ayarlanmış sabit boşluk yerine. */
+    --safe-top: env(safe-area-inset-top, 24px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   svg{ width:1em; height:1em; display:inline-block; vertical-align:middle; flex-shrink:0; }
@@ -37,6 +42,7 @@
     width:100%;
     max-width:430px;
     height:100vh;
+    height:100dvh; /* tarayıcı adres çubuğu boyu değişse bile gerçek görünür yüksekliğe uyar */
     max-height:930px;
     background:var(--bg);
     overflow:hidden;
@@ -60,11 +66,20 @@
   }
   .maint-title{ font-size:20px; font-weight:800; color:#fff; margin-bottom:10px; }
   .maint-msg{ font-size:14.5px; line-height:1.5; color:#c7c7d1; white-space:pre-wrap; }
+  /* .ob-btn varsayılan olarak opacity:0 (sadece açılış ekranı animasyonuyla
+     görünür oluyor) — bakım/ban/güncelleme ekranlarındaki butonlar için o
+     animasyona bağlı olmayan, her zaman görünür ayrı bir stil kullanıyoruz. */
+  .overlay-btn{ margin-top:18px; background:var(--grad); border:none; color:#fff; font-weight:700; font-size:15px; padding:13px 38px; border-radius:26px; cursor:pointer; box-shadow:0 4px 20px rgba(236,72,153,.35); }
   #banOverlay{
     position:fixed; inset:0; z-index:99998; display:none; align-items:center; justify-content:center;
     background:#0a0a0d; padding:30px;
   }
   #banOverlay.show{ display:flex; }
+  #updateOverlay{
+    position:fixed; inset:0; z-index:99997; display:none; align-items:center; justify-content:center;
+    background:#0a0a0d; padding:30px;
+  }
+  #updateOverlay.show{ display:flex; }
   .report-reason-list{ display:flex; flex-direction:column; gap:8px; margin:10px 0 16px; }
   .report-reason-btn{
     text-align:left; background:var(--panel-2); border:1px solid var(--border); border-radius:10px;
@@ -76,7 +91,7 @@
   #topbar{
     position:absolute; top:0; left:0; right:0; z-index:20;
     display:flex; align-items:center; justify-content:center;
-    padding:38px 12px 8px;
+    padding:calc(14px + var(--safe-top)) 12px 8px;
     gap:22px;
     pointer-events:none;
   }
@@ -97,11 +112,11 @@
   }
   .live-entry-btn .live-dot{ width:7px; height:7px; border-radius:50%; background:#ff3b5c; box-shadow:0 0 6px #ff3b5c; }
   #searchBtn{
-    position:absolute; right:10px; top:33px; pointer-events:auto; background:rgba(255,255,255,.12); border:none; color:#fff; cursor:pointer;
+    position:absolute; right:10px; top:calc(9px + var(--safe-top)); pointer-events:auto; background:rgba(255,255,255,.12); border:none; color:#fff; cursor:pointer;
     font-size:24px; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   }
   .brand{
-    display:flex; align-items:center; gap:8px; pointer-events:auto; position:absolute; left:16px; top:40px;
+    display:flex; align-items:center; gap:8px; pointer-events:auto; position:absolute; left:16px; top:calc(16px + var(--safe-top));
   }
   .brand .dot{ width:10px; height:10px; border-radius:50%; background:var(--grad); box-shadow:0 0 10px var(--accent2);}
   .brand span{ font-weight:800; font-size:18px; letter-spacing:.3px;
@@ -229,7 +244,7 @@
 
   /* ---------- Bottom nav ---------- */
   #nav{
-    display:flex; align-items:center; justify-content:space-around; padding:8px 6px 10px;
+    display:flex; align-items:center; justify-content:space-around; padding:8px 6px calc(10px + var(--safe-bottom));
     background:var(--bg); border-top:1px solid var(--border); z-index:30; position:relative;
   }
   .nav-btn{ background:none; border:none; color:var(--text-faint); display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; font-size:10.5px; font-weight:600; padding:4px 6px;}
@@ -271,7 +286,7 @@
   /* chat */
   #chatView{ position:absolute; inset:0; background:var(--bg); z-index:35; display:none; flex-direction:column; }
   #chatView.show{ display:flex; }
-  .chat-header{ display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--border);}
+  .chat-header{ display:flex; align-items:center; gap:10px; padding:calc(14px + var(--safe-top)) 16px 14px; border-bottom:1px solid var(--border);}
   .chat-header button{ background:none; border:none; color:#fff; cursor:pointer;}
   .chat-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px;}
   .bubble{ max-width:75%; padding:9px 13px; border-radius:16px; font-size:14px; line-height:1.35;}
@@ -400,8 +415,6 @@
   /* ---------- Settings screen ---------- */
   #settingsView{ position:absolute; inset:0; background:var(--bg); z-index:35; display:none; flex-direction:column; }
   #settingsView.show{ display:flex; }
-  #settingsView .chat-header{ padding-top:30px; }
-  #otherProfileView .chat-header{ padding-top:30px; }
   .settings-scroll{ flex:1; overflow-y:auto; padding-bottom:24px; }
   .settings-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px 16px; border-bottom:1px solid var(--border);}
   .settings-row .srow-label{ font-size:14px; font-weight:600; }
@@ -545,6 +558,15 @@
       <div class="maint-logo">G</div>
       <div class="maint-title">Glowo Bakımda</div>
       <div class="maint-msg" id="maintenanceMessage">Glowo şu anda bakımda. Lütfen daha sonra tekrar dene.</div>
+    </div>
+  </div>
+
+  <div id="updateOverlay">
+    <div class="maint-box">
+      <div class="maint-logo">G</div>
+      <div class="maint-title">Güncelleme Gerekli</div>
+      <div class="maint-msg" id="updateMessage">Uygulamanın en güncel sürümünü yükleyin.</div>
+      <button class="overlay-btn" id="updateStoreBtn">Play Store'da Aç</button>
     </div>
   </div>
 
@@ -873,12 +895,24 @@
     </div>
   </div>
 
+  <div class="modal-overlay center" id="supportOverlay">
+    <div class="sheet">
+      <h3>Yardım ve Destek</h3>
+      <div style="font-size:13px;color:var(--text-faint);margin-bottom:10px;">Destek talebinizi girin, ekibimiz inceleyip size dönüş yapacak.</div>
+      <textarea class="field-input" id="supportMessage" placeholder="Destek talebinizi girin..." rows="4" style="width:100%;resize:vertical;"></textarea>
+      <div class="modal-btns">
+        <button class="btn-ghost" id="supportCancel">Vazgeç</button>
+        <button class="btn-primary" id="supportSend">Gönder</button>
+      </div>
+    </div>
+  </div>
+
   <div id="banOverlay">
     <div class="maint-box">
       <div class="maint-logo" style="background:linear-gradient(135deg,#f43f5e,#ef4444);">⛔</div>
       <div class="maint-title">Hesabın Askıya Alındı</div>
       <div class="maint-msg" id="banMessage"></div>
-      <button class="ob-btn" id="banLogoutBtn" style="margin-top:18px;">Çıkış Yap</button>
+      <button class="overlay-btn" id="banLogoutBtn">Çıkış Yap</button>
     </div>
   </div>
 
@@ -913,12 +947,23 @@ let myUid = null;
 db.collection("settings").doc("app").onSnapshot(doc=>{
   const d = doc.exists ? doc.data() : {};
   const overlay = document.getElementById("maintenanceOverlay");
+  const updateOverlay = document.getElementById("updateOverlay");
   if(d && d.maintenance){
     document.getElementById("maintenanceMessage").textContent =
       d.message || "Glowo şu anda bakımda. Lütfen daha sonra tekrar dene.";
     overlay.classList.add("show");
+    updateOverlay.classList.remove("show");
+  } else if(d && d.updateRequired){
+    overlay.classList.remove("show");
+    document.getElementById("updateMessage").textContent =
+      d.updateMessage || "Uygulamanın en güncel sürümünü yükleyin.";
+    document.getElementById("updateStoreBtn").onclick = ()=>{
+      window.open(d.updatePlayStoreUrl || "https://play.google.com/store/apps", "_blank");
+    };
+    updateOverlay.classList.add("show");
   } else {
     overlay.classList.remove("show");
+    updateOverlay.classList.remove("show");
   }
 }, err=>console.error("bakım modu dinleyicisi hatası", err));
 
@@ -1396,6 +1441,7 @@ function postNode(p){
   const el = document.createElement("div");
   el.className = "post";
   el.dataset.id = p.id;
+  el._post = p; // patchPostNode() bunu günceller — video/etkileşim dinleyicileri hep güncel veriyi görsün diye
   const isOwnPost = p.uid === myUid;
   const mediaHtml = p.videoURL ? "" : `<div class="post-bg" style="background:${p.color}"></div>`;
   el.innerHTML = `
@@ -1451,25 +1497,23 @@ function postNode(p){
     const pauseIcon = document.createElement("div");
     pauseIcon.className = "vid-pause-icon";
     pauseIcon.innerHTML = ICONS.play;
-    /* Tek dokunma: oynat/duraklat. Çift dokunma (TikTok tarzı): videoyu beğen
-       ve ortada kalp animasyonu göster. İkisi aynı click olayı üzerinden
-       ayrıştırılıyor — tek dokunma 280ms bekletilip o sürede ikinci bir
-       dokunma gelmezse uygulanıyor. */
-    let vidTapTimer = null;
+    /* Tek dokunma: oynat/duraklat — HİÇBİR gecikme olmadan anında uygulanır
+       (ortaya dokununca video hemen dursun/başlasın diye). Çift dokunma
+       (TikTok tarzı): videoyu beğenir ve kalp animasyonu gösterir; tek
+       dokunmanın oynat/duraklat değişimini geri alıp videonun oynamaya
+       devam etmesini sağlar (beğenirken video durmuş kalmasın diye). */
     let vidLastTap = 0;
     vid.addEventListener("click", ()=>{
       const now = Date.now();
-      if(now - vidLastTap < 300){
-        vidLastTap = 0;
-        clearTimeout(vidTapTimer);
-        setPostLiked(p, el, true);
+      const isDoubleTap = (now - vidLastTap) < 300;
+      vidLastTap = now;
+      if(vid.paused){ vid.play().catch(()=>{}); pauseIcon.classList.remove("show"); }
+      else { vid.pause(); pauseIcon.classList.add("show"); }
+      if(isDoubleTap){
+        setPostLiked(el._post || p, el, true);
         showHeartPop(el);
-      } else {
-        vidLastTap = now;
-        vidTapTimer = setTimeout(()=>{
-          if(vid.paused){ vid.play().catch(()=>{}); pauseIcon.classList.remove("show"); }
-          else { vid.pause(); pauseIcon.classList.add("show"); }
-        }, 300);
+        vid.play().catch(()=>{});
+        pauseIcon.classList.remove("show");
       }
     });
     const blurBg = document.createElement("div");
@@ -1534,19 +1578,87 @@ function postNode(p){
   return el;
 }
 
+/* Akıştaki mevcut bir gönderi elemanının (video HARİÇ) metin/rozet
+   kısımlarını günceller — takip/beğeni/yorum/paylaşım sayıları her
+   değiştiğinde (ör. birini takip edince, bir video beğenilince) TÜM akışı
+   yeniden oluşturmak yerine sadece bunu kullanıyoruz. Böylece o an oynayan
+   video yeniden oluşturulmuyor: en baştan başlamıyor, donmuyor. */
+function patchPostNode(el, p){
+  el._post = p;
+  const isOwnPost = p.uid === myUid;
+  const unameEl = el.querySelector(".uname");
+  if(unameEl){
+    unameEl.innerHTML = `@${p.user}${p.founderPost?`<span class="founder-mini" title="Kurucu">${ICONS.crown}</span>`:""}${isOwnPost?"":`<span class="follow-chip ${p.following?'following':''}" data-act="follow">${p.following?'Takip Ediliyor':(pendingSentRequests.has(p.uid)?'İstek Gönderildi':'Takip Et')}</span>`}`;
+  }
+  const captionEl = el.querySelector(".caption");
+  if(captionEl) captionEl.innerHTML = `${p.caption} <span class="hashtags">${p.tags}</span>`;
+  const wrap = el.querySelector(".avatar-wrap");
+  if(wrap){
+    const shouldShowPlus = !(isOwnPost||p.following||pendingSentRequests.has(p.uid));
+    const existingBadge = wrap.querySelector(".plus-badge");
+    if(shouldShowPlus && !existingBadge){
+      const badge = document.createElement("div");
+      badge.className = "plus-badge";
+      badge.dataset.act = "follow";
+      badge.textContent = "+";
+      wrap.appendChild(badge);
+    } else if(!shouldShowPlus && existingBadge){
+      existingBadge.remove();
+    }
+  }
+  const likeBtn = el.querySelector('[data-act="like"]');
+  if(likeBtn){
+    likeBtn.classList.toggle("liked", p.liked);
+    likeBtn.innerHTML = (p.liked?ICONS.heartFilled:ICONS.heart) + `<span data-role="likecount">${fmt(p.likes)}</span>`;
+  }
+  const saveBtn = el.querySelector('[data-act="save"]');
+  if(saveBtn){
+    saveBtn.classList.toggle("saved", p.saved);
+    saveBtn.innerHTML = (p.saved?ICONS.bookmarkFilled:ICONS.bookmark) + `<span>Kaydet</span>`;
+  }
+  const commentSpan = el.querySelector('[data-act="comment"] span');
+  if(commentSpan) commentSpan.textContent = p.comments.length;
+  const shareSpan = el.querySelector('[data-act="share"] span');
+  if(shareSpan) shareSpan.textContent = fmt(p.shares);
+}
 function renderFeed(){
-  feedEl.innerHTML = "";
   const list = state.posts
     .filter(p => !isBlockedEitherWay(p.uid))
     .filter(p => state.feedFilter === "foryou" || p.following);
   if(list.length===0){
+    feedEl.innerHTML = "";
     const msg = state.posts.length===0
       ? "Henüz hiç video yok. İlk videoyu sen paylaş! 🎬"
       : "Takip ettiğin kimse henüz video paylaşmadı. \"Öneriler\" sekmesine göz at!";
     feedEl.innerHTML = `<div class="empty-hint">${msg}</div>`;
     return;
   }
-  list.forEach(p=> feedEl.appendChild(postNode(p)));
+  const emptyHint = feedEl.querySelector(".empty-hint");
+  if(emptyHint) emptyHint.remove();
+
+  /* Var olan gönderi elemanlarını id'ye göre eşleştiriyoruz: amaç, oynayan
+     bir video her akış güncellemesinde (takip, beğeni, yeni gönderi vb.)
+     en baştan yeniden oluşturulup yeniden başlamasın/donmasın — sadece
+     GERÇEKTEN yeni ya da kaldırılan gönderiler DOM'da değişsin. */
+  const existing = {};
+  feedEl.querySelectorAll(".post").forEach(el=>{ existing[el.dataset.id] = el; });
+
+  list.forEach((p, idx)=>{
+    const id = String(p.id);
+    let el = existing[id];
+    if(el){
+      patchPostNode(el, p);
+      delete existing[id];
+    } else {
+      el = postNode(p);
+    }
+    const atIndex = feedEl.children[idx];
+    if(atIndex !== el) feedEl.insertBefore(el, atIndex || null);
+  });
+
+  // Artık listede olmayanları (engellendi, filtre değişti, silindi vb.) kaldır
+  Object.values(existing).forEach(el=> el.remove());
+
   setupVideoObserver();
 }
 
@@ -1854,6 +1966,36 @@ document.querySelectorAll(".report-reason-btn").forEach(btn=>{
       toast("Şikayet gönderilemedi, tekrar dene");
     });
   });
+});
+
+/* ===================== YARDIM VE DESTEK ===================== */
+function openSupportSheet(){
+  document.getElementById("supportMessage").value = "";
+  document.getElementById("supportOverlay").classList.add("show");
+}
+function closeSupportSheet(){
+  document.getElementById("supportOverlay").classList.remove("show");
+}
+document.getElementById("supportCancel").addEventListener("click", closeSupportSheet);
+document.getElementById("supportOverlay").addEventListener("click", (e)=>{
+  if(e.target.id === "supportOverlay") closeSupportSheet();
+});
+document.getElementById("supportSend").addEventListener("click", ()=>{
+  const input = document.getElementById("supportMessage");
+  const msg = input.value.trim();
+  if(!msg){ toast("Lütfen bir mesaj yaz"); return; }
+  const sendBtn = document.getElementById("supportSend");
+  sendBtn.disabled = true;
+  db.collection("supportRequests").add({
+    uid: myUid, username: state.profile.user, message: msg,
+    createdAt: FieldValue.serverTimestamp()
+  }).then(()=>{
+    closeSupportSheet();
+    toast("Destek talebin gönderildi, en kısa sürede döneceğiz");
+  }).catch(err=>{
+    console.error("destek talebi gönderilemedi", err);
+    toast("Gönderilemedi, tekrar dene");
+  }).finally(()=>{ sendBtn.disabled = false; });
 });
 
 /* ===================== NAV / TABS ===================== */
@@ -3347,7 +3489,7 @@ function renderSettings(){
     <div class="settings-row clickable danger" id="setDelete"><div class="srow-label">Hesabı Sil</div></div>
   `;
   document.getElementById("setEditProfile").addEventListener("click", ()=>{ closeSettings(); openEditModal(); });
-  document.getElementById("setHelp").addEventListener("click", ()=> toast("Destek: destek@glowo.app"));
+  document.getElementById("setHelp").addEventListener("click", openSupportSheet);
   document.getElementById("setMicPermission").addEventListener("click", requestMicPermission);
   document.getElementById("setCamPermission").addEventListener("click", requestCamPermission);
   refreshPermRows();
