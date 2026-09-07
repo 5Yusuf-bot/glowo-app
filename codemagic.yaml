@@ -77,6 +77,87 @@ workflows:
         # submit_to_app_store: true   # hazır olduğunda bu satırı aç
 
   # ============================================================
+  # iOS - SADECE KENDİ TELEFONUNA KURMAK İÇİN, Apple Developer Program
+  # (yıllık 99$) ÜYELİĞİ OLMADAN. App Store'a YÜKLENEMEZ, sadece
+  # kendi iPhone'una "sideload" etmek için kullanılır.
+  #
+  # Nasıl çalışır: Bu iş akışı uygulamayı HİÇBİR imza olmadan (unsigned)
+  # derler ve normal bir .ipa gibi paketler. Bunu App Store Connect'e
+  # falan yüklemiyoruz — imzasız olduğu için kendi başına telefona
+  # kurulamaz. Onun yerine ücretsiz "Sideloadly" programını (Windows
+  # veya Mac, bilgisayarına kur) kullanıp, ÜCRETSİZ Apple ID'inle
+  # (99$ ödemeden) bu imzasız .ipa'yı kendi imzanla imzalatıp telefona
+  # USB kablosuyla kuruyorsun. Tek dezavantajı: ücretsiz Apple ID ile
+  # imzalanan uygulamalar 7 günde bir "süresi doldu" diyip kapanır —
+  # o zaman aynı .ipa'yı Sideloadly'e tekrar sürükleyip yeniden
+  # imzalatman (birkaç saniye sürer) yeterli, tekrar build almana
+  # gerek yok.
+  # ============================================================
+  ios-personal-unsigned:
+    name: Glowo - iOS Kişisel Kullanım (imzasız, App Store'suz)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      vars:
+        XCODE_WORKSPACE: "App.xcworkspace"
+        XCODE_SCHEME: "App"
+      node: 20.17.0
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Bağımlılıkları kur
+        script: npm install
+      - name: Web klasörünü hazırla
+        script: |
+          mkdir -p www resources
+          [ -f index.html ] && cp -f index.html www/index.html
+          [ -f glowo_icon_192.png ] && cp -f glowo_icon_192.png www/glowo_icon_192.png
+          [ -f glowo_icon_512.png ] && cp -f glowo_icon_512.png www/glowo_icon_512.png
+          [ -f manifest.json ] && cp -f manifest.json www/manifest.json
+          [ -f icon.png ] && cp -f icon.png resources/icon.png
+          [ -f icon.png ] && cp -f icon.png resources/logo.png
+          [ -f icon.png ] && cp -f icon.png resources/icon-only.png
+          [ -f splash.png ] && cp -f splash.png resources/splash.png
+          [ -f splash_dark.png ] && cp -f splash_dark.png resources/splash_dark.png
+          echo "--- www içeriği ---"; ls -la www
+          if [ ! -f www/index.html ]; then
+            echo "HATA: www/index.html bulunamadı. GitHub deponda index.html dosyasının (repo kökünde ya da www/ klasöründe) var olduğundan emin ol."
+            exit 1
+          fi
+      - name: iOS platformunu ekle/güncelle
+        script: |
+          npx cap add ios || true
+          npx cap sync ios
+      - name: Uygulama ikonu ve açılış ekranını oluştur
+        script: |
+          npm install @capacitor/assets --save-dev
+          npx capacitor-assets generate --ios --iconBackgroundColor '#0a0a0d' --iconBackgroundColorDark '#0a0a0d' --splashBackgroundColor '#0a0a0d' --splashBackgroundColorDark '#0a0a0d'
+      - name: CocoaPods kurulumu
+        script: |
+          cd ios/App && pod install
+      - name: Sürüm numarasını artır
+        script: |
+          cd ios/App
+          agvtool new-version -all $BUILD_NUMBER
+      - name: İmzasız arşiv oluştur
+        script: |
+          xcodebuild archive \
+            -workspace ios/App/App.xcworkspace \
+            -scheme "$XCODE_SCHEME" \
+            -archivePath "$CM_BUILD_DIR/App.xcarchive" \
+            -sdk iphoneos \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" DEVELOPMENT_TEAM=""
+      - name: İmzasız .ipa'ya paketle
+        script: |
+          mkdir -p "$CM_BUILD_DIR/unsigned_ipa/Payload"
+          cp -r "$CM_BUILD_DIR/App.xcarchive/Products/Applications/App.app" "$CM_BUILD_DIR/unsigned_ipa/Payload/"
+          cd "$CM_BUILD_DIR/unsigned_ipa"
+          zip -r "$CM_BUILD_DIR/glowo-unsigned.ipa" Payload
+          echo "Hazır: glowo-unsigned.ipa (imzasız — Sideloadly ile kendi Apple ID'inle imzalayıp telefonuna kur)"
+    artifacts:
+      - glowo-unsigned.ipa
+
+  # ============================================================
   # ANDROID - APK üretimi (APKPure gibi üçüncü parti mağazalara
   # yüklemek için). Bu iş akışı imzalı (signed) bir "release" APK
   # üretir, çünkü çoğu mağaza imzasız/debug APK kabul etmez.
@@ -123,6 +204,26 @@ workflows:
         script: |
           npx cap add android || true
           npx cap sync android
+      - name: Push bildirimleri için Google Services'i kur
+        script: |
+          # google-services.json, Firebase Console'da "Android uygulaması ekle"
+          # ile (paket adı: com.yusuf.glowo) oluşturulup indirilir ve GitHub
+          # deposunun KÖKÜNE yüklenir. Burada yoksa build'i durdurmuyoruz —
+          # sadece push bildirimleri o build'de çalışmaz, uygulamanın geri
+          # kalanı normal şekilde derlenir.
+          if [ ! -f google-services.json ]; then
+            echo "UYARI: google-services.json bulunamadı — push bildirimleri BU BUILD'DE çalışmayacak."
+            echo "Firebase Console > Proje ayarları > Android uygulaması ekle (paket: com.yusuf.glowo) ile indirip repo köküne yükle."
+          else
+            cp -f google-services.json android/app/google-services.json
+            sed -i "s#classpath 'com.android.tools.build:gradle.*#&\n        classpath 'com.google.gms:google-services:4.4.2'#" android/build.gradle
+            echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+            if ! grep -q "com.google.gms:google-services" android/build.gradle; then
+              echo "HATA: Google Services eklentisi android/build.gradle'a eklenemedi."
+              exit 1
+            fi
+            echo "Google Services (push bildirimleri) kuruldu."
+          fi
       - name: Uygulama ikonu ve açılış ekranını oluştur
         script: |
           npm install @capacitor/assets --save-dev
@@ -271,6 +372,26 @@ workflows:
         script: |
           npx cap add android || true
           npx cap sync android
+      - name: Push bildirimleri için Google Services'i kur
+        script: |
+          # google-services.json, Firebase Console'da "Android uygulaması ekle"
+          # ile (paket adı: com.yusuf.glowo) oluşturulup indirilir ve GitHub
+          # deposunun KÖKÜNE yüklenir. Burada yoksa build'i durdurmuyoruz —
+          # sadece push bildirimleri o build'de çalışmaz, uygulamanın geri
+          # kalanı normal şekilde derlenir.
+          if [ ! -f google-services.json ]; then
+            echo "UYARI: google-services.json bulunamadı — push bildirimleri BU BUILD'DE çalışmayacak."
+            echo "Firebase Console > Proje ayarları > Android uygulaması ekle (paket: com.yusuf.glowo) ile indirip repo köküne yükle."
+          else
+            cp -f google-services.json android/app/google-services.json
+            sed -i "s#classpath 'com.android.tools.build:gradle.*#&\n        classpath 'com.google.gms:google-services:4.4.2'#" android/build.gradle
+            echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+            if ! grep -q "com.google.gms:google-services" android/build.gradle; then
+              echo "HATA: Google Services eklentisi android/build.gradle'a eklenemedi."
+              exit 1
+            fi
+            echo "Google Services (push bildirimleri) kuruldu."
+          fi
       - name: Uygulama ikonu ve açılış ekranını oluştur
         script: |
           npm install @capacitor/assets --save-dev
