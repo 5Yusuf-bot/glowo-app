@@ -881,6 +881,24 @@
     </div>
   </div>
 
+  <div class="modal-overlay center" id="speedAnnounceOverlay">
+    <div class="sheet">
+      <h3>🚀 Glowo Artık Çok Daha Hızlı!</h3>
+      <div style="font-size:13.5px;color:var(--text-dim);line-height:1.55;">
+        Son güncellemeyle birlikte Glowo'nun altyapısında büyük bir hız
+        optimizasyonu yaptık: videolar artık çok daha hızlı yükleniyor, akışta
+        kaydırırken oluşan takılma ve donma sorunları büyük ölçüde azaltıldı.
+        Arka planda çalışan yeni yükleme sistemi sayesinde uygulama daha az
+        internet verisi harcıyor, telefonunun pilini daha az yoruyor ve her
+        cihazda daha akıcı çalışıyor. Kısacası Glowo şimdi her zamankinden
+        daha hızlı, daha akıcı ve daha keyifli. İyi seyirler!
+      </div>
+      <div class="modal-btns">
+        <button class="modal-btns-danger" id="speedAnnounceOk" style="flex:1;padding:11px 0;border-radius:9px;font-weight:700;font-size:14px;border:none;cursor:pointer;background:var(--grad);color:#fff;">Harika, Devam Et</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay center" id="reportOverlay">
     <div class="sheet">
       <h3>İçeriği Şikayet Et</h3>
@@ -1057,6 +1075,52 @@ async function getDeviceId(){
   }
   return fallback;
 }
+/* ---- Push bildirimleri: Capacitor'ın "PushNotifications" eklentisi kurulu
+   native APK'da çalışır (düz tarayıcıda/PWA'da eklenti bulunmadığı için
+   sessizce atlanır). Cihaz jetonunu (token) alıp users/{uid}.fcmTokens
+   dizisine kaydediyoruz — asıl bildirimi (telefon kapalıyken/uygulama
+   kapalıyken bile) Cloud Functions tarafı, notifications/{id} koleksiyonuna
+   yeni bir belge düşünce gönderiyor (bkz. functions/index.js). ---- */
+let currentFcmToken = null;
+async function registerPushNotifications(){
+  try{
+    const PN = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications;
+    if(!PN || !myUid) return;
+    const perm = await PN.requestPermissions();
+    if(perm.receive !== "granted") return;
+    await PN.addListener("registration", async (token)=>{
+      if(!token || !token.value || !myUid) return;
+      currentFcmToken = token.value;
+      try{
+        await db.collection("users").doc(myUid).update({
+          fcmTokens: FieldValue.arrayUnion(token.value)
+        });
+      }catch(e){ console.error("fcm token kaydedilemedi", e); }
+    });
+    await PN.addListener("registrationError", (err)=>{
+      console.error("push kayıt hatası", err);
+    });
+    await PN.addListener("pushNotificationActionPerformed", (action)=>{
+      // Bildirime dokununca ilgili sekmeye götür (basit yönlendirme).
+      const type = action && action.notification && action.notification.data && action.notification.data.type;
+      if(type==="message") document.querySelector('.nav-btn[data-tab="inbox"]')?.click();
+      else if(type==="follow" || type==="follow_request" || type==="follow_accept") document.querySelector('.nav-btn[data-tab="friends"]')?.click();
+    });
+    await PN.register();
+  }catch(e){ console.error("push bildirimi kurulamadı", e); }
+}
+/* Çıkış yapılırken bu cihazın jetonunu hesaptan kaldırıyoruz — yoksa çıkış
+   yapılmış bir hesap adına bu cihaza bildirim gitmeye devam edebilir. */
+async function unregisterPushToken(){
+  if(!currentFcmToken || !myUid) return;
+  try{
+    await db.collection("users").doc(myUid).update({
+      fcmTokens: FieldValue.arrayRemove(currentFcmToken)
+    });
+  }catch(e){ /* çıkış akışını bloklamasın */ }
+  currentFcmToken = null;
+}
+
 (async ()=>{
   try{
     const deviceId = await getDeviceId();
@@ -1176,10 +1240,19 @@ function persistAccount(){
    bir kere gösterilir (açılış menüsünde). */
 if(!Storage.get("glowo_inactivity_notice_seen")){
   document.getElementById("inactivityNoticeOverlay").classList.add("show");
+} else if(!Storage.get("glowo_speed_announce_seen")){
+  document.getElementById("speedAnnounceOverlay").classList.add("show");
 }
 document.getElementById("inactivityNoticeOk").addEventListener("click", ()=>{
   Storage.set("glowo_inactivity_notice_seen", "1");
   document.getElementById("inactivityNoticeOverlay").classList.remove("show");
+  if(!Storage.get("glowo_speed_announce_seen")){
+    document.getElementById("speedAnnounceOverlay").classList.add("show");
+  }
+});
+document.getElementById("speedAnnounceOk").addEventListener("click", ()=>{
+  Storage.set("glowo_speed_announce_seen", "1");
+  document.getElementById("speedAnnounceOverlay").classList.remove("show");
 });
 
 /* ===================== FIRESTORE DATA LAYER =====================
@@ -1335,6 +1408,18 @@ function subscribeIncomingFollowRequests(){
       if(friendsTab && friendsTab.classList.contains("active")) renderFriends();
     }, err=>console.error("incoming follow requests listener error", err));
 }
+/* Push bildirimi tetiklemek için: notifications/{id}'e yazınca, Cloud
+   Functions tarafı (functions/index.js) bunu görüp hedef kullanıcının
+   telefonuna anlık bildirim gönderiyor — telefon kapalıyken/uygulama
+   kapalıyken bile. Kendi kendine bildirim gitmesin diye toUid===myUid ise
+   hiçbir şey yapmıyoruz. */
+function notifyUser(toUid, type, extra){
+  if(!toUid || toUid===myUid) return;
+  db.collection("notifications").add({
+    toUid, type, fromUid: myUid, fromUsername: (state.profile.user||"").replace(/^@+/,""),
+    ...(extra||{}), createdAt: FieldValue.serverTimestamp(), read:false
+  }).catch(err=> console.error("bildirim gönderilemedi", err));
+}
 async function acceptFollowRequest(req){
   const followRef = db.collection("follows").doc(req.from+"_"+myUid);
   const fromRef = db.collection("users").doc(req.from);
@@ -1345,7 +1430,7 @@ async function acceptFollowRequest(req){
   batch.update(fromRef, {following: FieldValue.increment(1)});
   batch.update(meRef, {followers: FieldValue.increment(1)});
   batch.delete(reqRef);
-  try{ await batch.commit(); toast("Takip isteği kabul edildi"); }catch(e){ console.error(e); toast("Bir hata oluştu"); }
+  try{ await batch.commit(); toast("Takip isteği kabul edildi"); notifyUser(req.from, "follow_accept"); }catch(e){ console.error(e); toast("Bir hata oluştu"); }
 }
 async function declineFollowRequest(req){
   try{ await db.collection("followRequests").doc(req.id).delete(); toast("İstek reddedildi"); }
@@ -1409,6 +1494,7 @@ async function toggleFollow(targetUid, targetIsPrivate){
         createdAt: FieldValue.serverTimestamp()
       });
       toast("Takip isteği gönderildi");
+      notifyUser(targetUid, "follow_request");
     }catch(e){ console.error(e); toast("Bir hata oluştu, tekrar dene"); }
     return;
   }
@@ -1420,7 +1506,7 @@ async function toggleFollow(targetUid, targetIsPrivate){
   batch.set(followRef, {follower:myUid, target:targetUid, createdAt: FieldValue.serverTimestamp()});
   batch.update(meRef, {following: FieldValue.increment(1)});
   batch.update(targetRef, {followers: FieldValue.increment(1)});
-  try{ await batch.commit(); }catch(e){ console.error(e); toast("Bir hata oluştu, tekrar dene"); }
+  try{ await batch.commit(); notifyUser(targetUid, "follow"); }catch(e){ console.error(e); toast("Bir hata oluştu, tekrar dene"); }
 }
 
 function calcAge(dateStr){
@@ -1527,7 +1613,13 @@ function postNode(p){
     if(feedMuted) vid.setAttribute("muted","");
     vid.setAttribute("playsinline","");
     vid.setAttribute("webkit-playsinline","");
-    vid.preload = "auto";
+    /* "metadata" (not "auto"): akıştaki HER video aynı anda tam
+       indirilmeye başlamasın — sadece ekranda görünen video ihtiyaç
+       duyduğu veriyi indirsin. Bu, ilk açılışı ve kaydırmayı büyük
+       ölçüde hızlandırır ve gereksiz veri kullanımını önler; oynatma
+       davranışında hiçbir değişiklik yok, video ekrana girince zaten
+       normal şekilde yükleyip oynuyor. */
+    vid.preload = "metadata";
     const spinner = document.createElement("div");
     spinner.className = "vid-spinner";
     const hideSpinner = ()=>{ if(spinner.parentNode) spinner.remove(); };
@@ -1694,6 +1786,7 @@ function renderFeed(){
      GERÇEKTEN yeni ya da kaldırılan gönderiler DOM'da değişsin. */
   const existing = {};
   feedEl.querySelectorAll(".post").forEach(el=>{ existing[el.dataset.id] = el; });
+  const freshlyCreated = [];
 
   list.forEach((p, idx)=>{
     const id = String(p.id);
@@ -1703,20 +1796,32 @@ function renderFeed(){
       delete existing[id];
     } else {
       el = postNode(p);
+      freshlyCreated.push(el);
     }
     const atIndex = feedEl.children[idx];
     if(atIndex !== el) feedEl.insertBefore(el, atIndex || null);
   });
 
   // Artık listede olmayanları (engellendi, filtre değişti, silindi vb.) kaldır
-  Object.values(existing).forEach(el=> el.remove());
+  Object.values(existing).forEach(el=>{ if(observer) observer.unobserve(el); el.remove(); });
 
-  setupVideoObserver();
+  // Sadece yeni eklenen gönderileri gözlemciye kaydet — zaten sahnede olan
+  // (belki o an oynayan) videolara dokunulmaz.
+  if(freshlyCreated.length) setupVideoObserver(freshlyCreated);
+  else ensureVideoObserver();
 }
 
 let observer;
-function setupVideoObserver(){
-  if(observer) observer.disconnect();
+/* Gözlemciyi HER renderFeed() çağrısında (yani birinin bir yerde beğeni/
+   yorum/takip yapması gibi sık sık gelen her akış güncellemesinde) baştan
+   yok edip yeniden kurmak yerine, tek bir gözlemci ömür boyu yaşar ve
+   sadece YENİ eklenen gönderi elemanları ona eklenir. Bu, zaten sahnede
+   olan (ve belki o an oynayan) videoların gereksiz yere izlemeden çıkıp
+   tekrar izlemeye alınmasını önler, ve akış her güncellendiğinde 100
+   elemanı yeniden tarayıp yeniden gözlemlemek yerine sadece gerçekten
+   yeni olanlarla ilgilenir — daha az iş, daha akıcı kaydırma. */
+function ensureVideoObserver(){
+  if(observer) return observer;
   observer = new IntersectionObserver((entries)=>{
     entries.forEach(e=>{
       const v = e.target.querySelector("video");
@@ -1726,12 +1831,24 @@ function setupVideoObserver(){
         if(p && p.catch) p.catch(()=>{
           v.addEventListener("canplay", ()=> v.play().catch(()=>{}), {once:true});
         });
+        // Şu an izlenen video oynamaya başlar başlamaz, akıştaki BİR
+        // SONRAKİ videoyu da sessizce arka planda indirmeye başlat — böylece
+        // kaydırınca o video da direkt açılır, beklemez. Sadece bir sonraki
+        // (tek video) önden yüklendiği için 100 videonun hepsini önceden
+        // indirme sorunu geri gelmiyor, ama geçişler yine anında hissettiriyor.
+        const nextPost = e.target.nextElementSibling;
+        const nextVid = nextPost && nextPost.classList && nextPost.classList.contains("post") ? nextPost.querySelector("video") : null;
+        if(nextVid && nextVid.preload !== "auto") nextVid.preload = "auto";
       } else {
         v.pause();
       }
     });
   }, {threshold:0.6});
-  feedEl.querySelectorAll(".post").forEach(p=>observer.observe(p));
+  return observer;
+}
+function setupVideoObserver(newEls){
+  const obs = ensureVideoObserver();
+  (newEls || feedEl.querySelectorAll(".post")).forEach(p=>obs.observe(p));
 }
 
 /* Aynı anda birden fazla video sesi çalıp "ses karışması" olmasın diye:
@@ -1777,6 +1894,7 @@ function setPostLiked(p, postEl, liked){
   if(p.uid && p.uid!==myUid){
     db.collection("users").doc(p.uid).update({likes: FieldValue.increment(p.liked?1:-1)}).catch(()=>{});
   }
+  if(p.liked) notifyUser(p.uid, "like", {postId: String(p.id)}); // sadece beğenince, geri alınca değil
   return true;
 }
 /* Videoya çift dokununca ortada beliren kalp animasyonu. */
@@ -1979,6 +2097,7 @@ function submitComment(){
   document.getElementById("commentCount").textContent = `${p.comments.length} yorum`;
   document.querySelectorAll(`.post[data-id="${p.id}"] [data-act="comment"] span`).forEach(s=> s.textContent = p.comments.length);
   db.collection("posts").doc(String(p.id)).update({comments: FieldValue.arrayUnion(comment)}).catch(err=>console.error(err));
+  notifyUser(p.uid, "comment", {postId: String(p.id)});
 }
 
 /* ===================== ŞİKAYET ET =====================
@@ -2223,6 +2342,7 @@ async function pushChatMessage(msg){
       lastAt: FieldValue.serverTimestamp()
     }, {merge:true});
     await chatRef.collection("messages").add({ from: myUid, ...msg, createdAt: FieldValue.serverTimestamp() });
+    notifyUser(activeChatUid, "message");
   }catch(e){ console.error(e); toast("Mesaj gönderilemedi"); }
 }
 
@@ -3581,9 +3701,10 @@ document.getElementById("confirmOk").addEventListener("click", ()=>{
   if(confirmCallback) confirmCallback();
   confirmCallback = null;
 });
-function doLogout(){
+async function doLogout(){
   // Anonim hesap: çıkış yapmak bu kimliğe erişimi kalıcı olarak kaybetmek demektir
   // (onay diyaloğunda bu açıkça belirtiliyor).
+  await unregisterPushToken(); // signOut'tan ÖNCE — sonrasında yazma izni kalmıyor
   auth.signOut().catch(()=>{});
   Storage.remove("glowo_profile");
   Storage.remove("glowo_settings");
@@ -3802,6 +3923,7 @@ function applyTheme(){
 }
 function startApp(){
   applyTheme();
+  registerPushNotifications();
   subscribeFeed();
   subscribeFollowing();
   subscribeUsersDirectory();
