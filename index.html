@@ -91,7 +91,7 @@
   #topbar{
     position:absolute; top:0; left:0; right:0; z-index:20;
     display:flex; align-items:center; justify-content:center;
-    padding:calc(14px + var(--safe-top)) 12px 8px;
+    padding:calc(22px + var(--safe-top)) 12px 8px;
     gap:22px;
     pointer-events:none;
   }
@@ -112,11 +112,11 @@
   }
   .live-entry-btn .live-dot{ width:7px; height:7px; border-radius:50%; background:#ff3b5c; box-shadow:0 0 6px #ff3b5c; }
   #searchBtn{
-    position:absolute; right:10px; top:calc(9px + var(--safe-top)); pointer-events:auto; background:rgba(255,255,255,.12); border:none; color:#fff; cursor:pointer;
+    position:absolute; right:10px; top:calc(17px + var(--safe-top)); pointer-events:auto; background:rgba(255,255,255,.12); border:none; color:#fff; cursor:pointer;
     font-size:24px; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   }
   .brand{
-    display:flex; align-items:center; gap:8px; pointer-events:auto; position:absolute; left:16px; top:calc(16px + var(--safe-top));
+    display:flex; align-items:center; gap:8px; pointer-events:auto; position:absolute; left:16px; top:calc(24px + var(--safe-top));
   }
   .brand .dot{ width:10px; height:10px; border-radius:50%; background:var(--grad); box-shadow:0 0 10px var(--accent2);}
   .brand span{ font-weight:800; font-size:18px; letter-spacing:.3px;
@@ -257,9 +257,15 @@
 
   /* ---------- Generic scroll panels ---------- */
   .panel-scroll{ flex:1; overflow-y:auto; padding-top:58px; }
+  /* .panel-header artık üst güvenli alanı (çentik/saat çubuğu) da içeriyor,
+     bu yüzden hemen altındaki panel-scroll'un da o kadar daha fazla boşluk
+     bırakması gerekiyor — ama SADECE panel-header'dan sonra gelenler
+     (Arkadaşlar/Gelen Kutusu/Profil); .chat-header kullanan ekranlar zaten
+     normal akışta kendi güvenli alan boşluğunu ayırıyor, onlara dokunmuyoruz. */
+  .panel-header + .panel-scroll{ padding-top:calc(58px + var(--safe-top)); }
   .panel-header{
     position:absolute; top:0; left:0; right:0; z-index:15; background:var(--bg); border-bottom:1px solid var(--border);
-    padding:16px; font-size:19px; font-weight:800;
+    padding:calc(20px + var(--safe-top)) 16px 16px; font-size:19px; font-weight:800;
   }
 
   /* ---------- Friends ---------- */
@@ -286,7 +292,7 @@
   /* chat */
   #chatView{ position:absolute; inset:0; background:var(--bg); z-index:35; display:none; flex-direction:column; }
   #chatView.show{ display:flex; }
-  .chat-header{ display:flex; align-items:center; gap:10px; padding:calc(14px + var(--safe-top)) 16px 14px; border-bottom:1px solid var(--border);}
+  .chat-header{ display:flex; align-items:center; gap:10px; padding:calc(20px + var(--safe-top)) 16px 14px; border-bottom:1px solid var(--border);}
   .chat-header button{ background:none; border:none; color:#fff; cursor:pointer;}
   .chat-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px;}
   .bubble{ max-width:75%; padding:9px 13px; border-radius:16px; font-size:14px; line-height:1.35;}
@@ -548,6 +554,216 @@
     opacity:0; transition:all .25s ease; pointer-events:none; white-space:nowrap; border:1px solid var(--border);
   }
   #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ---------- Mavi tik (verified) ---------- */
+  .verified-tick{ display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; flex-shrink:0; }
+  .verified-tick svg{ width:100%; height:100%; }
+  .pname-row{ display:flex; align-items:center; justify-content:center; gap:5px; }
+
+  /* ---------- Hikayeler (Stories) ----------
+     #topbar gibi videonun ÜZERİNE yüzen, konumu absolute bir şerit — akışın
+     yüksekliğini değiştirmez, tam ekran video deneyimi bozulmaz. */
+  #storiesBar{
+    position:absolute; left:0; right:0; top:calc(64px + var(--safe-top)); z-index:19;
+    display:flex; gap:14px; overflow-x:auto; padding:8px 14px 16px;
+    -ms-overflow-style:none; scrollbar-width:none; pointer-events:none;
+    background:linear-gradient(180deg, rgba(0,0,0,.32) 0%, rgba(0,0,0,.12) 65%, rgba(0,0,0,0) 100%);
+  }
+  #storiesBar::-webkit-scrollbar{ display:none; }
+  .story-bubble{ display:flex; flex-direction:column; align-items:center; gap:5px; flex-shrink:0; cursor:pointer; width:60px; pointer-events:auto; }
+  .story-ring{ width:58px; height:58px; border-radius:50%; padding:2.5px; background:var(--border); display:flex; align-items:center; justify-content:center; position:relative; }
+  .story-ring.has-story{ background:var(--grad); }
+  .story-ring .story-avatar-inner{ width:100%; height:100%; border-radius:50%; border:2.5px solid var(--bg); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; color:#fff; overflow:hidden; background-size:cover; background-position:center; }
+  .story-add-badge{ position:absolute; bottom:-2px; right:-2px; width:19px; height:19px; border-radius:50%; background:var(--grad); border:2px solid var(--bg); display:flex; align-items:center; justify-content:center; color:#fff; }
+  .story-add-badge svg{ width:11px; height:11px; }
+  .story-bubble .sname{ font-size:11px; color:var(--text-dim); max-width:60px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  #storyComposeOverlay{ position:fixed; inset:0; z-index:76; display:none; background:rgba(0,0,0,.7); align-items:flex-end; justify-content:center; }
+  #storyComposeOverlay.show{ display:flex; }
+  .story-compose-sheet{ background:var(--panel); width:100%; border-radius:18px 18px 0 0; padding:18px 18px 26px; border:1px solid var(--border); border-bottom:none; }
+  .story-compose-preview{ width:100%; aspect-ratio:9/13; border-radius:16px; display:flex; align-items:center; justify-content:center; padding:22px; text-align:center; margin:12px 0; transition:background .2s ease; }
+  .story-compose-preview textarea{ width:100%; background:none; border:none; outline:none; resize:none; color:#fff; font-weight:800; font-size:21px; text-align:center; line-height:1.35; text-shadow:0 2px 10px rgba(0,0,0,.25); }
+  .story-bg-row{ display:flex; gap:9px; margin:6px 0 4px; flex-wrap:wrap; }
+  .story-bg-swatch{ width:28px; height:28px; border-radius:50%; cursor:pointer; border:2px solid transparent; flex-shrink:0; }
+  .story-bg-swatch.sel{ border-color:#fff; }
+
+  #storyViewerOverlay{ position:fixed; inset:0; z-index:77; display:none; background:#000; }
+  #storyViewerOverlay.show{ display:block; }
+  .story-viewer-bg{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:38px 26px; text-align:center; }
+  .story-viewer-text{ color:#fff; font-weight:800; font-size:23px; line-height:1.4; text-shadow:0 2px 14px rgba(0,0,0,.3); white-space:pre-wrap; }
+  .story-viewer-bars{ position:absolute; top:calc(10px + var(--safe-top)); left:10px; right:10px; display:flex; gap:5px; z-index:3; }
+  .story-viewer-bars .sv-bar{ flex:1; height:2.5px; border-radius:2px; background:rgba(255,255,255,.3); overflow:hidden; }
+  .story-viewer-bars .sv-bar i{ display:block; height:100%; width:0%; background:#fff; }
+  .story-viewer-bars .sv-bar.done i{ width:100%; }
+  .story-viewer-head{ position:absolute; top:calc(22px + var(--safe-top)); left:14px; right:14px; display:flex; align-items:center; gap:10px; z-index:3; color:#fff; }
+  .story-viewer-head .svh-name{ font-weight:700; font-size:14px; flex:1; }
+  .story-viewer-head button{ background:rgba(0,0,0,.35); border:none; color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .story-viewer-nav{ position:absolute; inset:0; display:flex; z-index:2; }
+  .story-viewer-nav div{ flex:1; }
+
+  /* ---------- Founder: gönderi silme ---------- */
+  .act-btn.admin-del{ color:#ff7a6b; }
+
+  /* ---------- Yorumlarda hediye ("+") butonu ---------- */
+  .comment-input-row .gift-plus-btn{
+    background:linear-gradient(135deg,#ffd76a,#ffb347); border:none; width:36px; height:36px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:#241a05; flex-shrink:0;
+  }
+  .comment-input-row .gift-plus-btn svg{ width:18px; height:18px; }
+
+  /* ---------- Hediye paneli ---------- */
+  .gift-sheet{ max-height:76vh; display:flex; flex-direction:column; }
+  .gift-balance-row{ display:flex; align-items:center; justify-content:space-between; padding:2px 2px 12px; font-size:13.5px; color:var(--text-dim); font-weight:600; }
+  .gift-balance-row b{ color:#ffcc66; font-size:15px; }
+  .gift-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; overflow-y:auto; padding:2px 2px 8px; }
+  .gift-item{ display:flex; flex-direction:column; align-items:center; gap:4px; background:var(--panel-2); border:1px solid var(--border); border-radius:12px; padding:12px 4px 9px; cursor:pointer; }
+  .gift-item .gicon{ font-size:28px; line-height:1; }
+  .gift-item .gname{ font-size:11px; font-weight:700; text-align:center; }
+  .gift-item .gcost{ font-size:10.5px; color:var(--text-faint); display:flex; align-items:center; gap:2px; }
+  .gift-item.disabled{ opacity:.38; cursor:not-allowed; }
+  .gift-item.tier5{ background:linear-gradient(160deg,#3a2a05,#1c1400); border-color:#ffb347; box-shadow:0 0 14px rgba(255,183,71,.3); }
+  .gift-item:active:not(.disabled){ transform:scale(.95); }
+
+  /* ---------- Hediye gönderme animasyonu (akışta / videoda) ----------
+     Her hediyenin KENDİNE ÖZGÜ bir hareketi var (paylaşılan tek bir kalıp
+     değil) — .gift-pop üzerindeki gift-<id> sınıfı hangi @keyframes'in
+     çalışacağını belirliyor, tier<N> sınıfı sadece boyut/konumu ayarlıyor. */
+  .gift-pop{ position:absolute; z-index:5; left:50%; bottom:18%; transform:translateX(-50%); pointer-events:none; text-align:center; animation:gpFade var(--gp-dur,2s) ease forwards; }
+  .gift-pop .gp-icon{ font-size:48px; display:inline-block; filter:drop-shadow(0 4px 14px rgba(0,0,0,.5)); }
+  .gift-pop .gp-label{ margin-top:6px; display:block; background:rgba(0,0,0,.5); color:#fff; font-size:12px; font-weight:700; padding:4px 10px; border-radius:20px; white-space:nowrap; }
+  .gift-pop.tier2 .gp-icon{ font-size:58px; }
+  .gift-pop.tier3 .gp-icon{ font-size:68px; }
+  .gift-pop.tier4 .gp-icon{ font-size:80px; }
+  .gift-pop.tier5{ left:50%; bottom:auto; top:50%; }
+  .gift-pop.tier5 .gp-icon{ font-size:112px; }
+  .gift-pop.tier5 .gp-label{ font-size:14px; background:linear-gradient(135deg,#ffd76a,#ffb347); color:#241a05; font-weight:900; }
+  @keyframes gpFade{
+    0%{ opacity:0; } 12%{ opacity:1; } 78%{ opacity:1; } 100%{ opacity:0; }
+  }
+
+  /* 🌹 Gül: sallanarak nazikçe süzülür */
+  .gift-rose .gp-icon{ animation:gpRose var(--gp-dur,1.8s) ease forwards; transform-origin:center bottom; }
+  @keyframes gpRose{
+    0%{ transform:translateY(20px) rotate(0deg) scale(.5); }
+    15%{ transform:translateY(0) rotate(-9deg) scale(1.05); }
+    35%{ transform:translateY(-20px) rotate(9deg) scale(1); }
+    55%{ transform:translateY(-45px) rotate(-6deg) scale(1); }
+    75%{ transform:translateY(-72px) rotate(5deg) scale(.97); }
+    100%{ transform:translateY(-105px) rotate(0deg) scale(.9); }
+  }
+  /* ❤️ Kalp: kalp atışı gibi nabız atarak yükselir */
+  .gift-heart .gp-icon{ animation:gpHeart var(--gp-dur,2s) cubic-bezier(.25,1,.4,1) forwards; }
+  @keyframes gpHeart{
+    0%{ transform:translateY(20px) scale(.4); }
+    14%{ transform:translateY(0) scale(1.3); }
+    22%{ transform:translateY(-6px) scale(.95); }
+    30%{ transform:translateY(-6px) scale(1.22); }
+    40%{ transform:translateY(-16px) scale(1); }
+    70%{ transform:translateY(-62px) scale(1.06); }
+    100%{ transform:translateY(-118px) scale(.9); }
+  }
+  /* ⭐ Yıldız: fır dönerek parıldar */
+  .gift-star .gp-icon{ animation:gpStar var(--gp-dur,2.2s) cubic-bezier(.25,1,.4,1) forwards; }
+  @keyframes gpStar{
+    0%{ transform:translateY(24px) scale(.3) rotate(0deg); }
+    16%{ transform:translateY(0) scale(1.3) rotate(140deg); }
+    40%{ transform:translateY(-32px) scale(1) rotate(300deg); }
+    65%{ transform:translateY(-68px) scale(1.1) rotate(420deg); }
+    100%{ transform:translateY(-135px) scale(.9) rotate(540deg); }
+  }
+  /* 🔥 Ateş: titreşerek/parlayarak yükselir */
+  .gift-fire .gp-icon{ animation:gpFire var(--gp-dur,2.4s) ease forwards; }
+  @keyframes gpFire{
+    0%{ transform:translateY(26px) scale(.4) skewX(0deg); }
+    10%{ transform:translateY(4px) scale(1.25) skewX(-5deg); }
+    20%{ transform:translateY(-6px) scale(1.05) skewX(5deg); }
+    30%{ transform:translateY(-16px) scale(1.18) skewX(-3deg); }
+    40%{ transform:translateY(-30px) scale(1.02) skewX(3deg); }
+    55%{ transform:translateY(-58px) scale(1.12) skewX(-2deg); }
+    100%{ transform:translateY(-145px) scale(.9) skewX(0deg); }
+  }
+  /* 💎 Elmas: parıldayarak (yassılıp genişleyerek) döner gibi yükselir */
+  .gift-diamond .gp-icon{ animation:gpDiamond var(--gp-dur,2.6s) cubic-bezier(.3,1,.4,1) forwards; }
+  @keyframes gpDiamond{
+    0%{ transform:translateY(28px) scaleX(.2) scaleY(.4); }
+    14%{ transform:translateY(0) scaleX(1.3) scaleY(1.3); }
+    30%{ transform:translateY(-22px) scaleX(.15) scaleY(1.2); }
+    45%{ transform:translateY(-38px) scaleX(1.2) scaleY(1.15); }
+    60%{ transform:translateY(-58px) scaleX(.2) scaleY(1.1); }
+    75%{ transform:translateY(-84px) scaleX(1.1) scaleY(1.05); }
+    100%{ transform:translateY(-155px) scaleX(1) scaleY(1); }
+  }
+  /* 🚀 Roket: fırlar, yalpalayarak yükselip iz bırakır */
+  .gift-rocket .gp-icon{ animation:gpRocket var(--gp-dur,2.4s) cubic-bezier(.55,0,.4,1) forwards; }
+  @keyframes gpRocket{
+    0%{ transform:translateY(60px) translateX(0) rotate(-45deg) scale(.5); }
+    10%{ transform:translateY(20px) translateX(0) rotate(-38deg) scale(1.1); }
+    100%{ transform:translateY(-320px) translateX(55px) rotate(-30deg) scale(.8); }
+  }
+  .gp-trail{ position:absolute; left:50%; bottom:6px; width:5px; height:55px; border-radius:3px;
+    background:linear-gradient(180deg, rgba(255,180,80,.9), rgba(255,80,20,0));
+    transform:translateX(-50%) rotate(-30deg); transform-origin:bottom center;
+    animation:gpRocketTrail var(--gp-dur,2.4s) cubic-bezier(.55,0,.4,1) forwards; }
+  @keyframes gpRocketTrail{
+    0%{ opacity:0; bottom:14px; } 10%{ opacity:.9; } 100%{ opacity:0; bottom:330px; }
+  }
+  /* 👑 Taç: yukarıdan süzülerek iner, parlayarak oturur */
+  .gift-crown .gp-icon{ animation:gpCrown var(--gp-dur,2.6s) cubic-bezier(.25,1,.4,1) forwards; }
+  @keyframes gpCrown{
+    0%{ transform:translateY(-95px) rotate(-16deg) scale(.5); }
+    30%{ transform:translateY(-42px) rotate(6deg) scale(1.18); }
+    50%{ transform:translateY(-48px) rotate(-4deg) scale(1.05); }
+    65%{ transform:translateY(-42px) rotate(0deg) scale(1.22); }
+    100%{ transform:translateY(-90px) rotate(0deg) scale(1.1); }
+  }
+  /* 🌟 Glowo Yıldızı: köşeden çapraz kayan bir kayan yıldız gibi geçer */
+  .gift-glowstar .gp-icon{ animation:gpShoot var(--gp-dur,2.8s) cubic-bezier(.2,.8,.3,1) forwards; }
+  @keyframes gpShoot{
+    0%{ transform:translate(-150px,95px) scale(.4) rotate(-20deg); }
+    18%{ transform:translate(-45px,10px) scale(1.3) rotate(10deg); }
+    40%{ transform:translate(0,-22px) scale(1) rotate(0deg); }
+    70%{ transform:translate(32px,-75px) scale(1.16) rotate(8deg); }
+    100%{ transform:translate(62px,-165px) scale(.9) rotate(0deg); }
+  }
+  /* 🏆 GlowoLive Kupası: en tepe hediye — ortada büyük giriş + konfeti patlaması */
+  .gift-glowocup .gp-icon{ animation:gpCup var(--gp-dur,3.2s) cubic-bezier(.22,1,.36,1) forwards; }
+  @keyframes gpCup{
+    0%{ transform:scale(.2) rotate(-20deg); }
+    16%{ transform:scale(1.5) rotate(8deg); }
+    30%{ transform:scale(1.1) rotate(-3deg); }
+    45%{ transform:scale(1.3) rotate(0deg); }
+    100%{ transform:scale(1.35) rotate(0deg); }
+  }
+  .confetti-bit{ position:absolute; top:50%; left:50%; width:7px; height:11px; border-radius:2px; opacity:0;
+    animation:gpConfetti var(--gp-dur,3.2s) cubic-bezier(.15,.6,.3,1) forwards; }
+  @keyframes gpConfetti{
+    0%{ opacity:0; transform:translate(-50%,-50%) rotate(0deg) scale(.6); }
+    10%{ opacity:1; }
+    100%{ opacity:0; transform:translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) rotate(var(--rot)) scale(.9); }
+  }
+
+  /* ---------- Profil jeton kartı + GlowoLive ---------- */
+  .token-card{ margin:14px 16px 4px; background:var(--panel-2); border:1px solid var(--border); border-radius:14px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .token-card .token-amount{ font-size:14.5px; font-weight:800; display:flex; align-items:center; gap:6px; }
+  .token-card .token-amount span{ font-size:11px; font-weight:600; color:var(--text-faint); }
+  .token-card .token-leaderboard-btn{ background:linear-gradient(135deg,#ffd76a,#ffb347); border:none; color:#241a05; font-size:12px; font-weight:800; padding:8px 12px; border-radius:10px; display:flex; align-items:center; gap:5px; cursor:pointer; white-space:nowrap; }
+  .token-card .token-leaderboard-btn svg{ width:14px; height:14px; }
+
+  #glowoLiveView{ position:absolute; inset:0; background:var(--bg); z-index:39; display:none; flex-direction:column; }
+  #glowoLiveView.show{ display:flex; }
+  .glowolive-row{ display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--border); }
+  .glowolive-rank{ width:24px; text-align:center; font-weight:800; font-size:14px; color:var(--text-faint); flex-shrink:0; }
+  .glowolive-rank.top1{ color:#ffd76a; }
+  .glowolive-rank.top2{ color:#d7dde3; }
+  .glowolive-rank.top3{ color:#e0a86f; }
+  .glowolive-meta{ flex:1; min-width:0; }
+  .glowolive-meta .gname{ font-weight:700; font-size:14px; display:flex; align-items:center; gap:5px; }
+  .glowolive-meta .gsub{ font-size:12px; color:var(--text-faint); }
+  .glowolive-score{ font-size:13px; font-weight:800; color:#ffcc66; display:flex; align-items:center; gap:4px; flex-shrink:0; }
+
+  /* ---------- Kurucu: kullanıcıya mavi tik ver/kaldır ---------- */
+  .grant-tick-btn{ background:var(--panel-2); border:1px solid var(--border); color:var(--text); font-size:12.5px; font-weight:700; padding:8px 12px; border-radius:10px; cursor:pointer; display:flex; align-items:center; gap:6px; }
+  .grant-tick-btn.on{ background:rgba(56,151,240,.15); border-color:#3897f0; color:#3897f0; }
 </style>
 </head>
 <body>
@@ -606,7 +822,7 @@
       <div class="ob-form">
         <h2>Giriş Yap</h2>
         <p class="ob-formsub">Kullanıcı adın ve şifrenle hesabına gir</p>
-        <div class="field-label">Kullanıcı Adı</div>
+        <div class="field-label">Kullanıcı Adı veya E-posta</div>
         <input class="field-input" id="loginUsername" placeholder="kullaniciadi">
         <div class="field-label">Şifre</div>
         <input class="field-input" id="loginPassword" type="password" placeholder="Şifren">
@@ -631,18 +847,19 @@
   <div id="tabs">
     <!-- HOME -->
     <div class="tab-panel active" id="tab-home">
+      <div id="storiesBar"></div>
       <div id="feed"></div>
     </div>
 
     <!-- FRIENDS (Takip İstekleri) -->
     <div class="tab-panel" id="tab-friends">
-      <div class="panel-header">Takip İstekleri</div>
+      <div class="panel-header" id="friendsPanelTitle">Takip İstekleri</div>
       <div class="panel-scroll" id="friendsScroll"></div>
     </div>
 
     <!-- INBOX -->
     <div class="tab-panel" id="tab-inbox">
-      <div class="panel-header">Gelen Kutusu</div>
+      <div class="panel-header" id="inboxPanelTitle">Gelen Kutusu</div>
       <div class="panel-scroll" id="inboxScroll"></div>
       <div id="chatView">
         <div class="chat-header">
@@ -724,12 +941,12 @@
 
     <!-- PROFILE -->
     <div class="tab-panel" id="tab-profile">
-      <div class="panel-header"><span>Profil</span><button id="settingsBtn"></button></div>
+      <div class="panel-header"><span id="profilePanelTitle">Profil</span><button id="settingsBtn"></button></div>
       <div class="panel-scroll" id="profileScroll"></div>
       <div id="settingsView">
         <div class="chat-header">
           <button id="settingsBack"></button>
-          <div style="font-weight:700;font-size:15px;">Ayarlar</div>
+          <div style="font-weight:700;font-size:15px;" id="settingsTitleText">Ayarlar</div>
         </div>
         <div class="settings-scroll" id="settingsScroll"></div>
       </div>
@@ -750,9 +967,56 @@
     <div class="sheet-head"><span id="commentCount">0 yorum</span><button id="closeComments">✕</button></div>
     <div class="comments-list" id="commentsList"></div>
     <div class="comment-input-row">
+      <button class="gift-plus-btn" id="openGiftBtn" title="Hediye Gönder"></button>
       <input id="commentInput" placeholder="Yorum ekle...">
       <button id="sendComment"></button>
     </div>
+  </div>
+
+  <!-- hediye (jeton) paneli -->
+  <div class="modal-overlay" id="giftOverlay">
+    <div class="sheet gift-sheet">
+      <div class="sheet-head"><span id="giftPanelTitle">Hediye Gönder</span><button id="closeGift">✕</button></div>
+      <div class="gift-balance-row"><span id="giftBalanceLabel">Bakiyen</span><span>🪙 <b id="giftBalanceText">10</b> <span id="giftBalanceUnit">Jeton</span></span></div>
+      <div class="gift-grid" id="giftGrid"></div>
+    </div>
+  </div>
+
+  <!-- hikaye oluştur -->
+  <div id="storyComposeOverlay">
+    <div class="story-compose-sheet">
+      <h3 id="storyComposeTitle" style="margin:0 0 10px;">Hikaye Oluştur</h3>
+      <div class="story-compose-preview" id="storyComposePreview">
+        <textarea id="storyComposeText" placeholder="Bir şeyler yaz..." maxlength="220" rows="4"></textarea>
+      </div>
+      <div class="story-bg-row" id="storyBgRow"></div>
+      <div class="modal-btns" style="margin-top:14px;">
+        <button class="btn-ghost" id="storyComposeCancel">Vazgeç</button>
+        <button class="btn-primary" id="storyComposeShare">Paylaş</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- hikaye görüntüleyici -->
+  <div id="storyViewerOverlay">
+    <div class="story-viewer-bars" id="storyViewerBars"></div>
+    <div class="story-viewer-head">
+      <div class="favatar" id="storyViewerAvatar" style="width:30px;height:30px;font-size:12px;"></div>
+      <div class="svh-name" id="storyViewerName"></div>
+      <button id="storyViewerDeleteBtn" title="Sil" style="display:none;"></button>
+      <button id="storyViewerClose">✕</button>
+    </div>
+    <div class="story-viewer-bg" id="storyViewerBg"><div class="story-viewer-text" id="storyViewerText"></div></div>
+    <div class="story-viewer-nav"><div id="storyViewerPrev"></div><div id="storyViewerNext"></div></div>
+  </div>
+
+  <!-- GlowoLive En Değerlileri -->
+  <div id="glowoLiveView">
+    <div class="chat-header">
+      <button id="glowoLiveBack"></button>
+      <div style="font-weight:700;font-size:15px;">🏆 <span id="glowoLiveTitle">GlowoLive En Değerlileri</span></div>
+    </div>
+    <div class="panel-scroll" id="glowoLiveScroll"></div>
   </div>
 
   <!-- upload modal -->
@@ -928,6 +1192,23 @@
     </div>
   </div>
 
+  <div class="modal-overlay center" id="changePasswordOverlay">
+    <div class="sheet">
+      <h3 id="cpTitleText">Şifreni Değiştir</h3>
+      <div style="font-size:13px;color:var(--text-faint);margin-bottom:10px;" id="cpDescText">Şifreni değiştirmek için önce mevcut şifreni doğrula.</div>
+      <div class="field-label" id="cpCurrentLabel">Mevcut Şifre</div>
+      <input class="field-input" type="password" id="cpCurrentInput" autocomplete="current-password">
+      <div class="field-label" id="cpNewLabel">Yeni Şifre</div>
+      <input class="field-input" type="password" id="cpNewInput" autocomplete="new-password">
+      <div class="field-label" id="cpConfirmLabel">Yeni Şifre (Tekrar)</div>
+      <input class="field-input" type="password" id="cpConfirmInput" autocomplete="new-password">
+      <div class="modal-btns">
+        <button class="btn-ghost" id="cpCancelBtn">Vazgeç</button>
+        <button class="btn-primary" id="cpSubmitBtn">Şifreyi Güncelle</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay center" id="supportOverlay">
     <div class="sheet">
       <h3>Yardım ve Destek</h3>
@@ -1061,6 +1342,24 @@ function refreshBanOverlay(){
    yoksa (örn. düz tarayıcıda test ederken) cihaza has, yerelde saklanan
    rastgele bir kimlikle idare ediyoruz — bu durumda tarayıcı verisi
    temizlenirse kimlik de sıfırlanır, ama bu sadece bir yedek durum. */
+/* ===================== STORAGE (persists account across visits, falls back to memory if blocked) =====================
+   NOT: bu blok burada, getDeviceId()'den ÖNCE tanımlı olmak ZORUNDA — aşağıdaki
+   "cihaz banı" kontrolü sayfa yüklenir yüklenmez (üstte, Capacitor'sız
+   web/PWA ortamında hiç "await"e uğramadan) senkron şekilde Storage'ı
+   kullanıyor. Bu tanım daha aşağıda olsaydı "Cannot access 'Storage' before
+   initialization" hatasıyla PWA/web sürümünde her sayfa yüklemesinde
+   patlardı (native APK'da Capacitor'ın kendi await'i sayesinde fark
+   edilmiyordu) — bu yüzden burada, en üstte tutuyoruz. */
+const Storage = (function(){
+  let ok = false;
+  try{ const k="__glowo_test__"; localStorage.setItem(k,"1"); localStorage.removeItem(k); ok = true; }catch(e){ ok = false; }
+  const mem = {};
+  return {
+    get(k){ if(ok){ try{ return localStorage.getItem(k); }catch(e){} } return (k in mem) ? mem[k] : null; },
+    set(k,v){ if(ok){ try{ localStorage.setItem(k,v); return; }catch(e){} } mem[k]=v; },
+    remove(k){ if(ok){ try{ localStorage.removeItem(k); }catch(e){} } delete mem[k]; }
+  };
+})();
 async function getDeviceId(){
   try{
     if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Device){
@@ -1151,11 +1450,28 @@ function hasPasswordProvider(){
   return !!(auth.currentUser && auth.currentUser.providerData.some(p=>p.providerId==="password"));
 }
 
+/* ---- Kurucu (founder) hesabı: giriş ekranında kullanıcı adı yerine bu
+   e-posta yazılırsa kurucunun kendi kullanıcı adına (FOUNDER_USERNAME)
+   yönlendirilir — giriş yine kurucunun GERÇEK şifresini ister, bu sadece bir
+   kısayol/takma ad, güvenlik zayıflatmıyor. Gerçek kullanıcı adın "yusuf"
+   değilse bu sabiti kendi kullanıcı adınla değiştir, yoksa bu e-posta
+   kısayolu (sadece kısayol — normal kullanıcı adı+şifre girişin her zaman
+   çalışır) hesabını bulamaz.
+   Kurucu YETKİLERİ (başkasının videosunu silme, mavi tik verme, sınırsız
+   jeton) ise Firestore'daki isFounder alanına bağlı — bu zaten sadece kayıt
+   olurken adını tam "Yusuf" yazan hesaba otomatik veriliyor (bkz.
+   submitOnboarding). */
+const FOUNDER_USERNAME = "yusuf";
+const FOUNDER_LOGIN_EMAIL = "yusuf@teyek.com";
+function isFounderAccount(){
+  return !!state.profile.isFounder;
+}
+
 /* ---- realtime listener handles (so we can unsubscribe cleanly) ---- */
 let unsubFeed = null, unsubOwnUser = null, unsubFollowing = null,
     unsubUsersDir = null, unsubChatsInbox = null, unsubActiveChat = null,
     unsubIncomingCalls = null, unsubBlocks = null, unsubMyRequests = null,
-    unsubIncomingRequests = null;
+    unsubIncomingRequests = null, unsubStories = null;
 
 /* ---- live client-side caches fed by the listeners above ---- */
 let usersDirectory = [];      // array of user records (excluding self), newest first
@@ -1203,8 +1519,132 @@ type:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2
 endcall:`<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 15.5c-3.2 0-5.9-1-8.2-2.9a1.6 1.6 0 0 1-.2-2.3l2-2.2a1.4 1.4 0 0 1 1.9-.2c.8.6 1.7 1 2.6 1.3.5.2.9.7.9 1.3v1.7c1 .2 2 .2 3 0v-1.7c0-.6.3-1.1.9-1.3.9-.3 1.8-.7 2.6-1.3a1.4 1.4 0 0 1 1.9.2l2 2.2c.6.7.6 1.7-.2 2.3-2.3 1.9-5 2.9-8.2 2.9Z" transform="rotate(135 12 12)"/></svg>`,
 volumeOn:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a9 9 0 0 1 0 12"/></svg>`,
 volumeOff:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>`,
-flag:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18"/><path d="M5 4h13l-3 4.5L18 13H5"/></svg>`
+flag:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18"/><path d="M5 4h13l-3 4.5L18 13H5"/></svg>`,
+verified:`<svg viewBox="0 0 24 24" fill="none"><path fill="#3897f0" d="M12 2.2l2.1 1.6 2.6-.4 1.1 2.4 2.4 1.1-.4 2.6 1.6 2.1-1.6 2.1.4 2.6-2.4 1.1-1.1 2.4-2.6-.4L12 21.8l-2.1-1.6-2.6.4-1.1-2.4-2.4-1.1.4-2.6L2.6 12l1.6-2.1-.4-2.6 2.4-1.1L7.3 3.8l2.6.4L12 2.2z"/><path stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8.3 12.2l2.4 2.4 5-5.2"/></svg>`,
+gift:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="1.5"/><path d="M3 13h18M12 9v12"/><path d="M12 9c-1.8 0-5-1-5-3.2A2.3 2.3 0 0 1 9.3 3.5C11 3.5 12 6 12 9Z"/><path d="M12 9c1.8 0 5-1 5-3.2A2.3 2.3 0 0 0 14.7 3.5C13 3.5 12 6 12 9Z"/></svg>`,
+trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"/><path d="M6 7l1 13.5A1.5 1.5 0 0 0 8.5 22h7a1.5 1.5 0 0 0 1.5-1.5L18 7"/><path d="M10 11v6M14 11v6"/></svg>`,
+trophy:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a3 3 0 0 0 3 5.2M17 5h3a3 3 0 0 1-3 5.2"/><path d="M12 14v3M9 21h6M9.5 21c0-2 .8-3 2.5-4 1.7 1 2.5 2 2.5 4"/></svg>`,
+storyPlus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>`
 };
+
+/* ===================== DİL / i18n =====================
+   Hafif bir çeviri katmanı: STRINGS[lang][key] bir string ya da (args)=>string
+   fonksiyonu olabilir. t(key,...args) her zaman geçerli bir string döner
+   (eksik anahtar / eksik dil için tr'ye düşer). applyLanguage() şu an
+   ekranda olan statik metinleri günceller; dinamik listeler (feed, ayarlar
+   içeriği vb.) zaten kendi render fonksiyonlarını t() üzerinden çağırdığı
+   için tekrar render edilince otomatik doğru dilde çıkar. */
+const STRINGS = {
+  tr: {
+    navHome:"Ana Sayfa", navFriends:"Arkadaşlar", navInbox:"Gelen Kutusu", navProfile:"Profil",
+    feedFollowing:"Takip Ettiklerin", feedForYou:"Öneriler",
+    panelFriendsTitle:"Takip İstekleri", panelInboxTitle:"Gelen Kutusu", panelProfileTitle:"Profil",
+    settingsTitle:"Ayarlar",
+    commentPlaceholder:"Yorum ekle...", liveCommentPlaceholder:"Yorum yaz...",
+    commentCount:(n)=>`${n} yorum`,
+    giftPanelTitle:"Hediye Gönder", giftBalanceLabel:"Bakiyen", giftBalanceUnit:"Jeton",
+    storyComposeTitle:"Hikaye Oluştur",
+    glowoLiveTitle:"GlowoLive En Değerlileri",
+    secAccount:"Hesap", rowEditProfile:"Profili Düzenle", rowEditProfileSub:"Ad, kullanıcı adı, biyografi, doğum tarihi",
+    secPermissions:"İzinler", rowMic:"Mikrofon İzni", rowMicSub:"Sesli video, arama ve canlı yayın için gerekli",
+    rowCam:"Kamera İzni", rowCamSub:"Video çekmek, görüntülü arama ve canlı yayın için gerekli",
+    secPrivacy:"Gizlilik", rowPrivateAccount:"Gizli Hesap", rowPrivateAccountSub:"Sadece onayladığın kişiler videolarını görebilir",
+    rowAllowComments:"Yorumlara İzin Ver", rowAllowCommentsSub:"Herkes videolarına yorum yapabilir",
+    rowDm:"Mesaj İzni", rowDmSub:"Kimler sana mesaj gönderebilir",
+    dmEveryone:"Herkes", dmFollowing:"Takip Ettiklerim", dmNone:"Kimse",
+    secNotif:"Bildirimler", notifLikes:"Beğeniler", notifComments:"Yorumlar", notifFollows:"Yeni Takipçiler", notifMessages:"Mesajlar",
+    secAppearance:"Görünüm", rowTheme:"Tema", rowThemeSub:"Koyu veya açık görünüm", themeDark:"Koyu", themeLight:"Açık",
+    secPlayback:"Oynatma", rowAutoplay:"Otomatik Oynat", rowAutoplaySub:"Akışta videolar otomatik başlasın",
+    rowDataSaver:"Veri Tasarrufu", rowDataSaverSub:"Videoları düşük kalitede yükle",
+    rowLang:"Dil", langTr:"Türkçe", langEn:"English",
+    secSecurity:"Güvenlik", rowChangePassword:"Şifreni Değiştir", rowChangePasswordSub:"Hesap şifreni güncelle",
+    secOther:"Diğer", rowHelp:"Yardım ve Destek", rowAbout:"Glowo Hakkında", rowAboutSub:(v)=>`Sürüm ${v}`,
+    rowLogout:"Çıkış Yap", rowDelete:"Hesabı Sil",
+    toastSaved:"Kaydedildi", toastLangSaved:"Dil tercihi kaydedildi",
+    logoutTitle:"Çıkış Yap", logoutText:"Hesabından çıkış yapmak istediğine emin misin? Tekrar girmek için hesap oluşturman gerekecek.",
+    deleteTitle:"Hesabı Sil", deleteText:"Bu işlem geri alınamaz. Tüm profil bilgilerin bu cihazdan silinecek.",
+    cpTitle:"Şifreni Değiştir", cpDesc:"Şifreni değiştirmek için önce mevcut şifreni doğrula.",
+    cpCurrent:"Mevcut Şifre", cpNew:"Yeni Şifre", cpConfirm:"Yeni Şifre (Tekrar)",
+    cpSubmit:"Şifreyi Güncelle", cpCancel:"Vazgeç",
+    cpSuccess:"Şifren güncellendi", cpErrWrong:"Mevcut şifre yanlış",
+    cpErrWeak:"Yeni şifre çok zayıf (en az 6 karakter olmalı)",
+    cpErrMismatch:"Yeni şifreler eşleşmiyor", cpErrTooMany:"Çok fazla deneme yapıldı, birazdan tekrar dene",
+    cpErrGeneric:"Şifre güncellenemedi, tekrar dene", cpErrEmpty:"Tüm alanları doldur"
+  },
+  en: {
+    navHome:"Home", navFriends:"Friends", navInbox:"Inbox", navProfile:"Profile",
+    feedFollowing:"Following", feedForYou:"For You",
+    panelFriendsTitle:"Follow Requests", panelInboxTitle:"Inbox", panelProfileTitle:"Profile",
+    settingsTitle:"Settings",
+    commentPlaceholder:"Add a comment...", liveCommentPlaceholder:"Write a comment...",
+    commentCount:(n)=>`${n} comment${n===1?"":"s"}`,
+    giftPanelTitle:"Send Gift", giftBalanceLabel:"Your balance", giftBalanceUnit:"Tokens",
+    storyComposeTitle:"Create Story",
+    glowoLiveTitle:"GlowoLive Top Gifters",
+    secAccount:"Account", rowEditProfile:"Edit Profile", rowEditProfileSub:"Name, username, bio, birth date",
+    secPermissions:"Permissions", rowMic:"Microphone Access", rowMicSub:"Needed for voice video, calls and live streams",
+    rowCam:"Camera Access", rowCamSub:"Needed to record video, video calls and live streams",
+    secPrivacy:"Privacy", rowPrivateAccount:"Private Account", rowPrivateAccountSub:"Only people you approve can see your videos",
+    rowAllowComments:"Allow Comments", rowAllowCommentsSub:"Everyone can comment on your videos",
+    rowDm:"Message Permission", rowDmSub:"Who can send you messages",
+    dmEveryone:"Everyone", dmFollowing:"People I Follow", dmNone:"No One",
+    secNotif:"Notifications", notifLikes:"Likes", notifComments:"Comments", notifFollows:"New Followers", notifMessages:"Messages",
+    secAppearance:"Appearance", rowTheme:"Theme", rowThemeSub:"Dark or light appearance", themeDark:"Dark", themeLight:"Light",
+    secPlayback:"Playback", rowAutoplay:"Autoplay", rowAutoplaySub:"Videos start automatically in the feed",
+    rowDataSaver:"Data Saver", rowDataSaverSub:"Upload videos in lower quality",
+    rowLang:"Language", langTr:"Türkçe", langEn:"English",
+    secSecurity:"Security", rowChangePassword:"Change Password", rowChangePasswordSub:"Update your account password",
+    secOther:"Other", rowHelp:"Help & Support", rowAbout:"About Glowo", rowAboutSub:(v)=>`Version ${v}`,
+    rowLogout:"Log Out", rowDelete:"Delete Account",
+    toastSaved:"Saved", toastLangSaved:"Language preference saved",
+    logoutTitle:"Log Out", logoutText:"Are you sure you want to log out? You'll need to sign in again to get back in.",
+    deleteTitle:"Delete Account", deleteText:"This action can't be undone. All your profile info will be removed from this device.",
+    cpTitle:"Change Password", cpDesc:"Verify your current password first to change it.",
+    cpCurrent:"Current Password", cpNew:"New Password", cpConfirm:"New Password (Confirm)",
+    cpSubmit:"Update Password", cpCancel:"Cancel",
+    cpSuccess:"Password updated", cpErrWrong:"Current password is incorrect",
+    cpErrWeak:"New password is too weak (min 6 characters)",
+    cpErrMismatch:"New passwords don't match", cpErrTooMany:"Too many attempts, try again shortly",
+    cpErrGeneric:"Couldn't update password, try again", cpErrEmpty:"Fill in all fields"
+  }
+};
+function t(key, ...args){
+  const lang = (state.settings && state.settings.language==="en") ? "en" : "tr";
+  const dict = STRINGS[lang] || STRINGS.tr;
+  let val = dict[key];
+  if(val === undefined) val = STRINGS.tr[key];
+  if(val === undefined) return key;
+  return typeof val === "function" ? val(...args) : val;
+}
+function applyLanguage(){
+  const setText = (id, text)=>{ const el = document.getElementById(id); if(el) el.textContent = text; };
+  const setPh = (id, text)=>{ const el = document.getElementById(id); if(el) el.placeholder = text; };
+  setText("navHomeLabel", t("navHome"));
+  setText("navFriendsLabel", t("navFriends"));
+  setText("navInboxLabel", t("navInbox"));
+  setText("navProfileLabel", t("navProfile"));
+  const feedFollowingBtn = document.querySelector('.feed-toggle button[data-filter="following"]');
+  const feedForYouBtn = document.querySelector('.feed-toggle button[data-filter="foryou"]');
+  if(feedFollowingBtn) feedFollowingBtn.textContent = t("feedFollowing");
+  if(feedForYouBtn) feedForYouBtn.textContent = t("feedForYou");
+  setText("friendsPanelTitle", t("panelFriendsTitle"));
+  setText("inboxPanelTitle", t("panelInboxTitle"));
+  setText("profilePanelTitle", t("panelProfileTitle"));
+  setText("settingsTitleText", t("settingsTitle"));
+  setPh("commentInput", t("commentPlaceholder"));
+  setPh("liveCommentInput", t("liveCommentPlaceholder"));
+  setText("giftPanelTitle", t("giftPanelTitle"));
+  setText("giftBalanceLabel", t("giftBalanceLabel"));
+  setText("giftBalanceUnit", t("giftBalanceUnit"));
+  setText("storyComposeTitle", t("storyComposeTitle"));
+  setText("glowoLiveTitle", t("glowoLiveTitle"));
+  if(typeof activeCommentPostId !== "undefined" && activeCommentPostId != null){
+    const p = findPost(activeCommentPostId);
+    if(p) setText("commentCount", t("commentCount", p.comments.length));
+  }
+  const settingsView = document.getElementById("settingsView");
+  if(settingsView && settingsView.classList.contains("show")) renderSettings();
+}
 
 /* ===================== DATA ===================== */
 const AV_COLORS = ["#8b5cf6","#ec4899","#22d3ee","#f97316","#22c55e","#eab308","#ef4444","#6366f1"];
@@ -1216,21 +1656,10 @@ const state = {
   feedFilter: "foryou",
   posts: [],
   notifications: [],
-  profile: { name:"", user:"", username:"", bio:"", color:"#8b5cf6", following:0, followers:0, likes:0, ptab:"videos", isFounder:false, birthdate:"", avatarPhoto:null },
+  profile: { name:"", user:"", username:"", bio:"", color:"#8b5cf6", following:0, followers:0, likes:0, ptab:"videos", isFounder:false, birthdate:"", avatarPhoto:null, tokens:10, tokenMilestoneFollowers:0, verified:false, giftTokensReceived:0 },
   settings: { theme:"dark", notifLikes:true, notifComments:true, notifFollows:true, notifMessages:true, privateAccount:false, allowComments:true, dmPermission:"everyone", language:"tr", dataSaver:false, autoplay:true }
 };
 
-/* ===================== STORAGE (persists account across visits, falls back to memory if blocked) ===================== */
-const Storage = (function(){
-  let ok = false;
-  try{ const k="__glowo_test__"; localStorage.setItem(k,"1"); localStorage.removeItem(k); ok = true; }catch(e){ ok = false; }
-  const mem = {};
-  return {
-    get(k){ if(ok){ try{ return localStorage.getItem(k); }catch(e){} } return (k in mem) ? mem[k] : null; },
-    set(k,v){ if(ok){ try{ localStorage.setItem(k,v); return; }catch(e){} } mem[k]=v; },
-    remove(k){ if(ok){ try{ localStorage.removeItem(k); }catch(e){} } delete mem[k]; }
-  };
-})();
 function persistAccount(){
   Storage.set("glowo_profile", JSON.stringify(state.profile));
   Storage.set("glowo_settings", JSON.stringify(state.settings));
@@ -1265,14 +1694,66 @@ function chatIdFor(otherUid){
 }
 
 function hydrateProfileFromDoc(data){
+  const prevPtab = state.profile.ptab || "videos";
   state.profile = {
     name: data.name || "", user: data.user || "", username: data.username || "",
     bio: data.bio || "", color: data.color || "#8b5cf6",
     following: data.following||0, followers: data.followers||0, likes: data.likes||0,
-    ptab: "videos", isFounder: !!data.isFounder, birthdate: data.birthdate || "",
-    avatarPhoto: data.avatarPhoto || null
+    ptab: prevPtab, isFounder: !!data.isFounder, birthdate: data.birthdate || "",
+    avatarPhoto: data.avatarPhoto || null,
+    tokens: data.tokens!==undefined ? data.tokens : 10,
+    tokenMilestoneFollowers: data.tokenMilestoneFollowers||0,
+    verified: !!data.verified,
+    giftTokensReceived: data.giftTokensReceived||0
   };
   state.settings.privateAccount = !!data.private;
+}
+
+/* ===================== JETON (TOKEN) SİSTEMİ =====================
+   Jeton gerçek parayla SATIN ALINAMAZ — tek kazanma yolu takipçi
+   kilometre taşlarına ulaşmak. Her kilometre taşına ilk kez ulaşıldığında
+   "grant" miktarı kadar jeton bakiyeye EKLENİR (bir öncekinin üstüne,
+   harcanmış olsa bile toplam bakiye buna göre artar). Kurucu hesabı
+   (isFounderAccount()) test amacıyla sınırsız jetona sahip gibi davranır,
+   bu tablodan hiç etkilenmez. Sayıları burada değiştirmek yeterli. */
+const TOKEN_MILESTONES = [
+  {followers:10,    grant:1},
+  {followers:20,    grant:5},
+  {followers:50,    grant:15},
+  {followers:100,   grant:40},
+  {followers:250,   grant:100},
+  {followers:500,   grant:250},
+  {followers:1000,  grant:600},
+  {followers:2500,  grant:1500},
+  {followers:5000,  grant:3500},
+  {followers:10000, grant:8000}
+];
+let tokenMilestoneGrantInFlight = false;
+function checkTokenMilestones(data){
+  if(!myUid || tokenMilestoneGrantInFlight) return;
+  // Eski hesaplarda jeton alanları hiç yok — sessizce sıfırdan (10 hediye
+  // jetonuyla) başlatıyoruz, bir sonraki snapshot zaten güncel veriyle gelir.
+  if(data.tokens===undefined){
+    db.collection("users").doc(myUid).update({
+      tokens:10, tokenMilestoneFollowers:0, verified: !!data.verified, giftTokensReceived: data.giftTokensReceived||0
+    }).catch(err=>console.error("jeton alanları başlatılamadı", err));
+    return;
+  }
+  if(isFounderAccount()) return;
+  const followers = data.followers||0;
+  const reached = data.tokenMilestoneFollowers||0;
+  const newlyReached = TOKEN_MILESTONES.filter(t=> t.followers>reached && t.followers<=followers);
+  if(!newlyReached.length) return;
+  const grantTotal = newlyReached.reduce((s,t)=>s+t.grant,0);
+  const topFollowers = newlyReached[newlyReached.length-1].followers;
+  tokenMilestoneGrantInFlight = true;
+  db.collection("users").doc(myUid).update({
+    tokens: FieldValue.increment(grantTotal),
+    tokenMilestoneFollowers: topFollowers
+  }).then(()=>{
+    toast(`🎉 ${topFollowers} takipçiye ulaştın! +${grantTotal} jeton kazandın`);
+  }).catch(err=>console.error("jeton verilemedi", err))
+    .finally(()=>{ tokenMilestoneGrantInFlight = false; });
 }
 
 /* Live copy of my own users/{uid} doc, so follower/following/likes counts on
@@ -1292,6 +1773,7 @@ function subscribeOwnUser(){
     const data = doc.data();
     hydrateProfileFromDoc(data);
     persistAccount();
+    checkTokenMilestones(data);
     const profileTab = document.getElementById("tab-profile");
     if(profileTab && profileTab.classList.contains("active")) renderProfile();
 
@@ -1528,6 +2010,14 @@ function toast(msg){
   clearTimeout(t._timer);
   t._timer = setTimeout(()=>t.classList.remove("show"), 1800);
 }
+/* Mavi tik: kendi profilim için state.profile.verified, başkası için (son
+   200 hesaptan biriyse) usersByUid'daki canlı veri — böylece kurucu bir
+   kullanıcıya tik verdiğinde/kaldırdığında rozet HER YERDE anında güncellenir
+   (eski gönderilere gömülü statik bir alan değil). */
+function verifiedTickHtml(uid, isOwn){
+  const v = isOwn ? state.profile.verified : !!(usersByUid[uid] && usersByUid[uid].verified);
+  return v ? `<span class="verified-tick" title="Onaylı Hesap">${ICONS.verified}</span>` : "";
+}
 function avatarCircle(size, colorOrGrad, text, photoUrl){
   if(photoUrl){
     return `<div class="favatar" style="width:${size}px;height:${size}px;background-image:url('${photoUrl}');background-size:cover;background-position:center;"></div>`;
@@ -1556,10 +2046,10 @@ function gridCellStyle(p){
 
 /* ===================== ICON INJECTION (static UI) ===================== */
 document.getElementById("searchBtn").innerHTML = ICONS.search;
-document.querySelector('[data-tab="home"]').innerHTML = ICONS.homeFilled + "<span>Ana Sayfa</span>";
-document.querySelector('[data-tab="friends"]').innerHTML = ICONS.friends + "<span>Arkadaşlar</span>";
-document.querySelector('[data-tab="inbox"]').innerHTML = `<span class="nav-icon-wrap">${ICONS.inbox}<span class="badge-dot" id="inboxDot"></span></span><span>Gelen Kutusu</span>`;
-document.querySelector('[data-tab="profile"]').innerHTML = ICONS.profile + "<span>Profil</span>";
+document.querySelector('[data-tab="home"]').innerHTML = ICONS.homeFilled + `<span id="navHomeLabel">${t("navHome")}</span>`;
+document.querySelector('[data-tab="friends"]').innerHTML = ICONS.friends + `<span id="navFriendsLabel">${t("navFriends")}</span>`;
+document.querySelector('[data-tab="inbox"]').innerHTML = `<span class="nav-icon-wrap">${ICONS.inbox}<span class="badge-dot" id="inboxDot"></span></span><span id="navInboxLabel">${t("navInbox")}</span>`;
+document.querySelector('[data-tab="profile"]').innerHTML = ICONS.profile + `<span id="navProfileLabel">${t("navProfile")}</span>`;
 document.getElementById("plusBtn").innerHTML = ICONS.plus;
 document.getElementById("closeComments").innerHTML = "✕";
 document.getElementById("sendComment").innerHTML = ICONS.send;
@@ -1587,7 +2077,7 @@ function postNode(p){
     <div class="post-shade"></div>
     <div class="post-body">
       <div class="post-info">
-        <div class="uname">@${p.user}${p.founderPost?`<span class="founder-mini" title="Kurucu">${ICONS.crown}</span>`:""}${isOwnPost?"":`<span class="follow-chip ${p.following?'following':''}" data-act="follow">${p.following?'Takip Ediliyor':(pendingSentRequests.has(p.uid)?'İstek Gönderildi':'Takip Et')}</span>`}</div>
+        <div class="uname">@${p.user}${p.founderPost?`<span class="founder-mini" title="Kurucu">${ICONS.crown}</span>`:""}${verifiedTickHtml(p.uid, isOwnPost)}${isOwnPost?"":`<span class="follow-chip ${p.following?'following':''}" data-act="follow">${p.following?'Takip Ediliyor':(pendingSentRequests.has(p.uid)?'İstek Gönderildi':'Takip Et')}</span>`}</div>
         <div class="caption">${p.caption} <span class="hashtags">${p.tags}</span></div>
         <div class="music-row">${ICONS.play.replace('viewBox="0 0 24 24"','viewBox="0 0 24 24" width="14" height="14"')}<span class="marquee">${p.music} &nbsp;&nbsp;•&nbsp;&nbsp; ${p.music}</span></div>
       </div>
@@ -1600,6 +2090,7 @@ function postNode(p){
         <button class="act-btn" data-act="comment">${ICONS.comment}<span>${p.comments.length}</span></button>
         <button class="act-btn ${p.saved?'saved':''}" data-act="save">${p.saved?ICONS.bookmarkFilled:ICONS.bookmark}<span>Kaydet</span></button>
         <button class="act-btn" data-act="share">${ICONS.share}<span>${fmt(p.shares)}</span></button>
+        ${isFounderAccount() ? `<button class="act-btn admin-del" data-act="admindelete" title="Videoyu Sil (Kurucu)">${ICONS.trash}<span>Sil</span></button>` : ""}
         <div class="disc"></div>
       </div>
     </div>
@@ -1732,7 +2223,7 @@ function patchPostNode(el, p){
   const isOwnPost = p.uid === myUid;
   const unameEl = el.querySelector(".uname");
   if(unameEl){
-    unameEl.innerHTML = `@${p.user}${p.founderPost?`<span class="founder-mini" title="Kurucu">${ICONS.crown}</span>`:""}${isOwnPost?"":`<span class="follow-chip ${p.following?'following':''}" data-act="follow">${p.following?'Takip Ediliyor':(pendingSentRequests.has(p.uid)?'İstek Gönderildi':'Takip Et')}</span>`}`;
+    unameEl.innerHTML = `@${p.user}${p.founderPost?`<span class="founder-mini" title="Kurucu">${ICONS.crown}</span>`:""}${verifiedTickHtml(p.uid, isOwnPost)}${isOwnPost?"":`<span class="follow-chip ${p.following?'following':''}" data-act="follow">${p.following?'Takip Ediliyor':(pendingSentRequests.has(p.uid)?'İstek Gönderildi':'Takip Et')}</span>`}`;
   }
   const captionEl = el.querySelector(".caption");
   if(captionEl) captionEl.innerHTML = `${p.caption} <span class="hashtags">${p.tags}</span>`;
@@ -1946,6 +2437,13 @@ function onPostActionClick(e){
     // ile gelip akışı yeniden çizecek, burada elle DOM değiştirmiyoruz
   } else if(act==="comment"){
     openComments(p.id);
+  } else if(act==="admindelete"){
+    if(!isFounderAccount()) return;
+    confirmAction("Videoyu Sil", `@${p.user} kullanıcısının bu videosunu kalıcı olarak silmek istediğine emin misin?`, ()=>{
+      db.collection("posts").doc(String(p.id)).delete()
+        .then(()=> toast("Video silindi"))
+        .catch(err=>{ console.error("video silinemedi", err); toast("Silinemedi, tekrar dene"); });
+    });
   }
 }
 feedEl.addEventListener("click", onPostActionClick);
@@ -1991,7 +2489,7 @@ let activeCommentPostId = null;
 function openComments(id){
   activeCommentPostId = id;
   const p = findPost(id);
-  document.getElementById("commentCount").textContent = `${p.comments.length} yorum`;
+  document.getElementById("commentCount").textContent = t("commentCount", p.comments.length);
   renderComments();
   document.getElementById("overlay").classList.add("show");
   document.getElementById("commentSheet").classList.add("show");
@@ -2061,7 +2559,7 @@ document.getElementById("commentsList").addEventListener("click", (e)=>{
     if(!val) return;
     c.replies.push({u: state.profile.user.replace("@",""), t: val, uid: myUid, ts: Date.now()});
     renderComments();
-    document.getElementById("commentCount").textContent = `${p.comments.length} yorum`;
+    document.getElementById("commentCount").textContent = t("commentCount", p.comments.length);
     db.collection("posts").doc(String(p.id)).update({comments: p.comments}).catch(err=>console.error(err));
   }
 });
@@ -2094,7 +2592,7 @@ function submitComment(){
   p.comments.push(comment);
   input.value = "";
   renderComments();
-  document.getElementById("commentCount").textContent = `${p.comments.length} yorum`;
+  document.getElementById("commentCount").textContent = t("commentCount", p.comments.length);
   document.querySelectorAll(`.post[data-id="${p.id}"] [data-act="comment"] span`).forEach(s=> s.textContent = p.comments.length);
   db.collection("posts").doc(String(p.id)).update({comments: FieldValue.arrayUnion(comment)}).catch(err=>console.error(err));
   notifyUser(p.uid, "comment", {postId: String(p.id)});
@@ -2169,6 +2667,362 @@ document.getElementById("supportSend").addEventListener("click", ()=>{
   }).finally(()=>{ sendBtn.disabled = false; });
 });
 
+/* ===================== HEDİYE (JETON) SİSTEMİ =====================
+   Jeton GERÇEK PARAYLA satın alınamaz — satın alma ekranı yok, "yakında"
+   yazısı da yok. Tek yol: TOKEN_MILESTONES (takipçi kilometre taşları).
+   Kurucu hesabı (isFounderAccount()) test için sınırsız jetonmuş gibi
+   davranır. En düşük katmandan en yükseğe doğru animasyon kalitesi artar
+   (bkz. .gift-pop.tier1..tier5 CSS). */
+const GIFTS = [
+  {id:"rose",     name:"Gül",               icon:"🌹", cost:1,     tier:1},
+  {id:"heart",    name:"Kalp",              icon:"❤️", cost:5,     tier:1},
+  {id:"star",     name:"Yıldız",            icon:"⭐", cost:15,    tier:2},
+  {id:"fire",     name:"Ateş",              icon:"🔥", cost:40,    tier:2},
+  {id:"diamond",  name:"Elmas",             icon:"💎", cost:100,   tier:3},
+  {id:"rocket",   name:"Roket",             icon:"🚀", cost:250,   tier:3},
+  {id:"crown",    name:"Taç",               icon:"👑", cost:600,   tier:4},
+  {id:"glowstar", name:"Glowo Yıldızı",     icon:"🌟", cost:1500,  tier:4},
+  {id:"glowocup", name:"GlowoLive Kupası",  icon:"🏆", cost:29999, tier:5}
+];
+let activeGiftPostId = null;
+function openGiftPanel(){
+  const p = findPost(activeCommentPostId);
+  if(!p){ toast("Hediye göndermek için önce bir videoyu aç"); return; }
+  activeGiftPostId = activeCommentPostId;
+  renderGiftGrid();
+  document.getElementById("giftOverlay").classList.add("show");
+}
+function closeGiftPanel(){
+  document.getElementById("giftOverlay").classList.remove("show");
+}
+function renderGiftGrid(){
+  const founder = isFounderAccount();
+  const balance = founder ? Infinity : (state.profile.tokens||0);
+  document.getElementById("giftBalanceText").textContent = founder ? "∞" : fmt(balance);
+  const grid = document.getElementById("giftGrid");
+  grid.innerHTML = GIFTS.map(g=>{
+    const afford = founder || balance >= g.cost;
+    return `<div class="gift-item tier${g.tier} ${afford?'':'disabled'}" data-id="${g.id}">
+      <span class="gicon">${g.icon}</span>
+      <span class="gname">${g.name}</span>
+      <span class="gcost">🪙 ${fmt(g.cost)}</span>
+    </div>`;
+  }).join("");
+  grid.querySelectorAll(".gift-item").forEach(cell=>{
+    cell.addEventListener("click", ()=>{
+      if(cell.classList.contains("disabled")) return;
+      const gift = GIFTS.find(g=>g.id===cell.dataset.id);
+      if(gift) sendGift(gift);
+    });
+  });
+}
+document.getElementById("openGiftBtn").innerHTML = ICONS.plus;
+document.getElementById("openGiftBtn").addEventListener("click", openGiftPanel);
+document.getElementById("closeGift").addEventListener("click", closeGiftPanel);
+document.getElementById("giftOverlay").addEventListener("click", (e)=>{ if(e.target.id==="giftOverlay") closeGiftPanel(); });
+
+/* Hediye gönderme: animasyon HER ZAMAN hemen oynar (deneyim asla "hata"
+   yüzünden bozulmasın). Kritik olan tek yazma, jeton bakiyeleri (users
+   koleksiyonu) — bu zaten var olan takip/beğeni yazmalarıyla aynı yolu
+   kullanıyor. "gifts" koleksiyonuna düşen kayıt sadece istatistik/liderlik
+   tablosu için — bu AYRI ve bağımsız bir yazma, o başarısız olsa bile (ör.
+   Firestore güvenlik kuralları henüz bu koleksiyona izin vermiyorsa)
+   hediye deneyimini ASLA bozmaz ve kullanıcıya hata göstermez. */
+async function sendGift(gift){
+  const p = findPost(activeGiftPostId);
+  if(!p){ closeGiftPanel(); return; }
+  const founder = isFounderAccount();
+  if(!founder && (state.profile.tokens||0) < gift.cost){ toast("Yetersiz jeton"); return; }
+  closeGiftPanel();
+  closeComments(); // yorum yerini de kapat — hediye animasyonu videoda hemen görünsün
+  showGiftAnimation(activeGiftPostId, gift);
+  toast(`${gift.icon} ${gift.name} gönderildi!`);
+
+  try{
+    const batch = db.batch();
+    let hasWrite = false;
+    if(!founder){
+      batch.update(db.collection("users").doc(myUid), {tokens: FieldValue.increment(-gift.cost)});
+      hasWrite = true;
+    }
+    if(p.uid && p.uid!==myUid){
+      batch.update(db.collection("users").doc(p.uid), {giftTokensReceived: FieldValue.increment(gift.cost)});
+      hasWrite = true;
+    }
+    if(hasWrite) await batch.commit();
+    if(p.uid && p.uid!==myUid) notifyUser(p.uid, "gift", {giftName: gift.name, tokens: gift.cost});
+  }catch(e){
+    // Sessizce logluyoruz — animasyon zaten oynadı, kullanıcıyı hatayla
+    // rahatsız etmiyoruz. Bu genelde "users" koleksiyonundaki tokens/
+    // giftTokensReceived alanlarına Firestore güvenlik kurallarının henüz
+    // izin vermemesinden kaynaklanır.
+    console.error("hediye jetonu güncellenemedi", e);
+  }
+  db.collection("gifts").add({
+    fromUid: myUid, fromUsername: state.profile.user||"", toUid: p.uid||null, toUsername: p.user||null,
+    postId: String(p.id), giftId: gift.id, giftName: gift.name, tokens: gift.cost,
+    createdAt: FieldValue.serverTimestamp()
+  }).catch(err=> console.error("hediye kaydı yazılamadı (sadece istatistik/liderlik tablosunu etkiler)", err));
+}
+
+/* Hediye animasyonu: hem ana akıştaki hem de video görüntüleyicideki (tekil
+   video) post elemanının üzerine oynatılır — hangisi ekrandaysa. Her
+   hediyenin kendine özgü bir hareketi var (bkz. .gift-<id> CSS kuralları);
+   roket bir iz bırakır, GlowoLive Kupası konfeti patlatır. */
+const GIFT_ANIM_MS = {
+  rose:1800, heart:2000, star:2200, fire:2400, diamond:2600,
+  rocket:2400, crown:2600, glowstar:2800, glowocup:3200
+};
+const CONFETTI_COLORS = ["#ffd76a","#ff6b81","#7ee8fa","#a78bfa","#4ade80","#f97316"];
+function showGiftAnimation(postId, gift){
+  const postEl = document.querySelector(`.post[data-id="${postId}"]`);
+  if(!postEl) return;
+  const duration = GIFT_ANIM_MS[gift.id] || 2200;
+  const pop = document.createElement("div");
+  pop.className = `gift-pop tier${gift.tier} gift-${gift.id}`;
+  pop.style.setProperty("--gp-dur", duration+"ms");
+  pop.innerHTML = `<span class="gp-icon">${gift.icon}</span><span class="gp-label">${escapeHtml((state.profile.user||"").replace(/^@+/,"@"))} ${escapeHtml(gift.name)} gönderdi</span>`;
+  if(gift.id==="rocket"){
+    const trail = document.createElement("div");
+    trail.className = "gp-trail";
+    trail.style.setProperty("--gp-dur", duration+"ms");
+    pop.insertBefore(trail, pop.firstChild);
+  }
+  if(gift.id==="glowocup"){
+    for(let i=0;i<14;i++){
+      const bit = document.createElement("span");
+      bit.className = "confetti-bit";
+      const angle = Math.random()*360;
+      const dist = 90 + Math.random()*100;
+      const tx = Math.cos(angle*Math.PI/180)*dist;
+      const ty = Math.sin(angle*Math.PI/180)*dist;
+      bit.style.setProperty("--tx", tx.toFixed(0)+"px");
+      bit.style.setProperty("--ty", ty.toFixed(0)+"px");
+      bit.style.setProperty("--rot", (Math.random()*540-270).toFixed(0)+"deg");
+      bit.style.setProperty("--gp-dur", duration+"ms");
+      bit.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+      bit.style.animationDelay = (Math.random()*0.25).toFixed(2)+"s";
+      pop.appendChild(bit);
+    }
+  }
+  postEl.appendChild(pop);
+  setTimeout(()=>{ if(pop.parentNode) pop.remove(); }, duration + 200);
+}
+
+/* ===================== HİKAYELER (yazılı, 24 saatlik) =====================
+   Instagram/TikTok tarzı üstte kayan hikaye şeridi — sadece METİN, 24 saat
+   sonra kendiliğinden düşer (sahibi uygulamayı açtığında sessizce silinir). */
+const STORY_BACKGROUNDS = [
+  "linear-gradient(135deg,#8b5cf6,#ec4899)",
+  "linear-gradient(135deg,#22d3ee,#8b5cf6)",
+  "linear-gradient(135deg,#f97316,#ec4899)",
+  "linear-gradient(135deg,#22c55e,#22d3ee)",
+  "linear-gradient(135deg,#eab308,#f97316)",
+  "linear-gradient(135deg,#ef4444,#8b5cf6)",
+  "#111318"
+];
+const STORY_TTL_MS = 24*60*60*1000;
+let myStories = [];
+let storiesByUser = [];
+let pendingStoryBg = STORY_BACKGROUNDS[0];
+
+function subscribeStories(){
+  if(unsubStories) unsubStories();
+  unsubStories = db.collection("stories").orderBy("createdAt","desc").limit(300)
+    .onSnapshot(snap=>{
+      const now = Date.now();
+      const all = snap.docs.map(d=>({id:d.id, ...d.data()}))
+        .filter(s=>{
+          const ms = s.createdAt && s.createdAt.toMillis ? s.createdAt.toMillis() : 0;
+          return ms && (now - ms) < STORY_TTL_MS;
+        });
+      myStories = all.filter(s=>s.uid===myUid);
+      const seen = new Set();
+      storiesByUser = [];
+      all.forEach(s=>{
+        if(s.uid===myUid || seen.has(s.uid)) return;
+        seen.add(s.uid);
+        storiesByUser.push(s);
+      });
+      // Süresi geçmiş kendi hikayelerimi arka planda sessizce temizliyoruz
+      // (Cloud Functions yok, bu yüzden temizlik istemci tarafında).
+      snap.docs.forEach(d=>{
+        const data = d.data();
+        if(data.uid!==myUid) return;
+        const ms = data.createdAt && data.createdAt.toMillis ? data.createdAt.toMillis() : 0;
+        if(ms && (now - ms) >= STORY_TTL_MS) db.collection("stories").doc(d.id).delete().catch(()=>{});
+      });
+      renderStoriesBar();
+    }, err=>console.error("hikaye listener hatası", err));
+}
+
+function renderStoriesBar(){
+  const el = document.getElementById("storiesBar");
+  if(!el || !myUid) return;
+  const myLatest = myStories[0];
+  const myBubble = `
+    <div class="story-bubble" id="myStoryBubble">
+      <div class="story-ring ${myLatest?'has-story':''}">
+        <div class="story-avatar-inner" style="${state.profile.avatarPhoto?`background-image:url('${state.profile.avatarPhoto}');`:`background:${state.profile.color};`}">${state.profile.avatarPhoto?"":initials(state.profile.name||"?")}</div>
+        <div class="story-add-badge">${ICONS.storyPlus}</div>
+      </div>
+      <div class="sname">Hikayen</div>
+    </div>`;
+  const others = storiesByUser.map(s=>`
+    <div class="story-bubble" data-uid="${s.uid}">
+      <div class="story-ring has-story">
+        <div class="story-avatar-inner" style="${s.avatarPhoto?`background-image:url('${s.avatarPhoto}');`:`background:${s.color||'#8b5cf6'};`}">${s.avatarPhoto?"":initials(s.username||"?")}</div>
+      </div>
+      <div class="sname">${escapeHtml((s.username||"").replace(/^@+/,""))}</div>
+    </div>`).join("");
+  el.innerHTML = myBubble + others;
+  document.getElementById("myStoryBubble").addEventListener("click", ()=>{
+    if(myStories.length) openStoryViewer(myStories, 0);
+    else openStoryCompose();
+  });
+  el.querySelectorAll(".story-bubble[data-uid]").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const idx = storiesByUser.findIndex(s=>s.uid===b.dataset.uid);
+      if(idx>-1) openStoryViewer(storiesByUser, idx);
+    });
+  });
+}
+
+/* ---------- hikaye oluşturma ---------- */
+function renderStoryBgRow(){
+  const row = document.getElementById("storyBgRow");
+  row.innerHTML = STORY_BACKGROUNDS.map((bg,i)=>`<div class="story-bg-swatch ${bg===pendingStoryBg?'sel':''}" data-i="${i}" style="background:${bg};"></div>`).join("");
+  row.querySelectorAll(".story-bg-swatch").forEach(sw=>{
+    sw.addEventListener("click", ()=>{
+      pendingStoryBg = STORY_BACKGROUNDS[sw.dataset.i];
+      document.getElementById("storyComposePreview").style.background = pendingStoryBg;
+      renderStoryBgRow();
+    });
+  });
+}
+function openStoryCompose(){
+  pendingStoryBg = STORY_BACKGROUNDS[0];
+  document.getElementById("storyComposeText").value = "";
+  document.getElementById("storyComposePreview").style.background = pendingStoryBg;
+  renderStoryBgRow();
+  document.getElementById("storyComposeOverlay").classList.add("show");
+  setTimeout(()=> document.getElementById("storyComposeText").focus(), 150);
+}
+function closeStoryCompose(){ document.getElementById("storyComposeOverlay").classList.remove("show"); }
+document.getElementById("storyComposeCancel").addEventListener("click", closeStoryCompose);
+document.getElementById("storyComposeOverlay").addEventListener("click", (e)=>{ if(e.target.id==="storyComposeOverlay") closeStoryCompose(); });
+document.getElementById("storyComposeShare").addEventListener("click", async ()=>{
+  const text = document.getElementById("storyComposeText").value.trim();
+  if(!text){ toast("Önce bir şeyler yaz"); return; }
+  const btn = document.getElementById("storyComposeShare");
+  btn.disabled = true;
+  try{
+    await db.collection("stories").add({
+      uid: myUid, username: state.profile.user, color: state.profile.color,
+      avatarPhoto: state.profile.avatarPhoto||null, text, bg: pendingStoryBg,
+      createdAt: FieldValue.serverTimestamp()
+    });
+    closeStoryCompose();
+    toast("Hikayen paylaşıldı");
+  }catch(e){ console.error("hikaye paylaşılamadı", e); toast("Paylaşılamadı, tekrar dene"); }
+  finally{ btn.disabled = false; }
+});
+
+/* ---------- hikaye görüntüleyici ---------- */
+let storyViewerList = [];
+let storyViewerIndex = 0;
+let storyViewerTimer = null;
+const STORY_VIEW_MS = 5000;
+function openStoryViewer(list, index){
+  storyViewerList = list;
+  document.getElementById("storyViewerOverlay").classList.add("show");
+  renderStoryViewerBars();
+  showStoryAt(index);
+}
+function renderStoryViewerBars(){
+  document.getElementById("storyViewerBars").innerHTML = storyViewerList.map(()=>`<div class="sv-bar"><i></i></div>`).join("");
+}
+function showStoryAt(idx){
+  clearTimeout(storyViewerTimer);
+  if(idx<0 || idx>=storyViewerList.length){ closeStoryViewer(); return; }
+  storyViewerIndex = idx;
+  const s = storyViewerList[idx];
+  document.getElementById("storyViewerBg").style.background = s.bg || "#111318";
+  document.getElementById("storyViewerText").textContent = s.text || "";
+  document.getElementById("storyViewerName").textContent = (s.username||"").replace(/^@+/,"@");
+  const av = document.getElementById("storyViewerAvatar");
+  if(s.avatarPhoto){ av.style.background = `url('${s.avatarPhoto}') center/cover`; av.textContent=""; }
+  else { av.style.background = s.color||"#8b5cf6"; av.textContent = initials(s.username||"?"); }
+  document.getElementById("storyViewerDeleteBtn").style.display = (s.uid===myUid) ? "flex" : "none";
+  document.querySelectorAll("#storyViewerBars .sv-bar").forEach((bar,i)=>{
+    bar.classList.toggle("done", i<idx);
+    const inner = bar.querySelector("i");
+    inner.style.transition = "none";
+    inner.style.width = i<idx ? "100%" : "0%";
+    if(i===idx){
+      requestAnimationFrame(()=>{
+        inner.style.transition = `width ${STORY_VIEW_MS}ms linear`;
+        inner.style.width = "100%";
+      });
+    }
+  });
+  storyViewerTimer = setTimeout(()=> showStoryAt(idx+1), STORY_VIEW_MS);
+}
+function closeStoryViewer(){
+  clearTimeout(storyViewerTimer);
+  document.getElementById("storyViewerOverlay").classList.remove("show");
+}
+document.getElementById("storyViewerClose").addEventListener("click", closeStoryViewer);
+document.getElementById("storyViewerPrev").addEventListener("click", ()=> showStoryAt(storyViewerIndex-1));
+document.getElementById("storyViewerNext").addEventListener("click", ()=> showStoryAt(storyViewerIndex+1));
+document.getElementById("storyViewerDeleteBtn").innerHTML = ICONS.trash;
+document.getElementById("storyViewerDeleteBtn").addEventListener("click", async ()=>{
+  const s = storyViewerList[storyViewerIndex];
+  if(!s || s.uid!==myUid) return;
+  try{ await db.collection("stories").doc(s.id).delete(); toast("Hikaye silindi"); }
+  catch(e){ console.error(e); toast("Silinemedi"); }
+  closeStoryViewer();
+});
+
+/* ===================== GLOWOLIVE EN DEĞERLİLERİ (liderlik tablosu) =====================
+   En çok hediye (jeton) ALAN hesapların sıralaması — giftTokensReceived
+   alanına göre. Kurucu hariç herkes bu listede yer alabilir. */
+function openGlowoLive(){
+  document.getElementById("glowoLiveView").classList.add("show");
+  renderGlowoLive();
+}
+function closeGlowoLive(){ document.getElementById("glowoLiveView").classList.remove("show"); }
+document.getElementById("glowoLiveBack").innerHTML = ICONS.back;
+document.getElementById("glowoLiveBack").addEventListener("click", closeGlowoLive);
+async function renderGlowoLive(){
+  const el = document.getElementById("glowoLiveScroll");
+  el.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-faint);font-size:13.5px;">Yükleniyor...</div>`;
+  try{
+    const snap = await db.collection("users").orderBy("giftTokensReceived","desc").limit(50).get();
+    const rows = snap.docs.map(d=>({uid:d.id, ...d.data()})).filter(u=>(u.giftTokensReceived||0)>0);
+    if(!rows.length){
+      el.innerHTML = `<div style="padding:60px 30px;text-align:center;color:var(--text-faint);font-size:14px;line-height:1.5;">Henüz kimse hediye almadı. İlk hediyeyi sen gönder! 🎁</div>`;
+      return;
+    }
+    el.innerHTML = rows.map((u,i)=>{
+      const rankClass = i===0?"top1":i===1?"top2":i===2?"top3":"";
+      return `
+        <div class="glowolive-row">
+          <div class="glowolive-rank ${rankClass}">${i+1}</div>
+          ${avatarCircle(42, u.color||"#8b5cf6", initials(u.name||"?"), u.avatarPhoto)}
+          <div class="glowolive-meta">
+            <div class="gname">${escapeHtml(u.name||"Kullanıcı")}${u.isFounder?` <span class="founder-mini" style="width:14px;height:14px;">${ICONS.crown}</span>`:""}${u.verified?`<span class="verified-tick" style="width:13px;height:13px;">${ICONS.verified}</span>`:""}</div>
+            <div class="gsub">${u.user||""}</div>
+          </div>
+          <div class="glowolive-score">🪙 ${fmt(u.giftTokensReceived||0)}</div>
+        </div>`;
+    }).join("");
+  }catch(e){
+    console.error("GlowoLive listesi alınamadı", e);
+    el.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-faint);font-size:13.5px;">Liste yüklenemedi, tekrar dene.</div>`;
+  }
+}
+
 /* ===================== NAV / TABS ===================== */
 document.querySelectorAll(".nav-btn[data-tab]").forEach(btn=>{
   btn.addEventListener("click", ()=>{
@@ -2176,15 +3030,17 @@ document.querySelectorAll(".nav-btn[data-tab]").forEach(btn=>{
     state.activeTab = tab;
     document.querySelectorAll(".nav-btn[data-tab]").forEach(b=>{
       b.classList.remove("active");
-      const t = b.dataset.tab;
+      const tabName = b.dataset.tab;
       const filled = {home:ICONS.homeFilled, friends:ICONS.friendsFilled, inbox:ICONS.inboxFilled, profile:ICONS.profileFilled};
       const line = {home:ICONS.home, friends:ICONS.friends, inbox:ICONS.inbox, profile:ICONS.profile};
-      const active = t===tab;
+      const active = tabName===tab;
       if(active) b.classList.add("active");
-      if(t==="inbox"){
-        b.innerHTML = `<span class="nav-icon-wrap">${active?filled.inbox:line.inbox}<span class="badge-dot" id="inboxDot" style="${state.notifications.length===0?'display:none':''}"></span></span><span>Gelen Kutusu</span>`;
+      if(tabName==="inbox"){
+        b.innerHTML = `<span class="nav-icon-wrap">${active?filled.inbox:line.inbox}<span class="badge-dot" id="inboxDot" style="${state.notifications.length===0?'display:none':''}"></span></span><span id="navInboxLabel">${t("navInbox")}</span>`;
       } else {
-        b.innerHTML = (active?filled[t]:line[t]) + `<span>${ {home:"Ana Sayfa",friends:"Arkadaşlar",profile:"Profil"}[t] }</span>`;
+        const labelId = {home:"navHomeLabel", friends:"navFriendsLabel", profile:"navProfileLabel"}[tabName];
+        const labelKey = {home:"navHome", friends:"navFriends", profile:"navProfile"}[tabName];
+        b.innerHTML = (active?filled[tabName]:line[tabName]) + `<span id="${labelId}">${t(labelKey)}</span>`;
       }
     });
     document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
@@ -2694,7 +3550,7 @@ async function openOtherProfile(friend){
   el.innerHTML = `
     <div class="profile-top">
       <div class="pavatar" style="background:${friend.color};${friend.avatarPhoto?`background-image:url(${friend.avatarPhoto});background-size:cover;`:""}">${friend.avatarPhoto?"":initials(friend.name)}</div>
-      <div class="pname">${friend.name}</div>
+      <div class="pname-row"><div class="pname">${friend.name}</div>${friend.verified?`<span class="verified-tick" title="Onaylı Hesap">${ICONS.verified}</span>`:""}</div>
       <div class="puser">${friend.user}${friend.private?` · ${ICONS.lock} Gizli Hesap`:""}</div>
       ${friend.isFounder ? `<div class="founder-badge">${ICONS.crown} KURUCU</div>` : ""}
       ${friendLiveData ? `<div class="live-badge-profile" id="friendLiveBadge"><span class="live-dot"></span>CANLI YAYINDA</div>` : ""}
@@ -2704,6 +3560,7 @@ async function openOtherProfile(friend){
         <div><b>${fmt(friend.likes||0)}</b><span>Beğeni</span></div>
       </div>
       <div class="pbio">${escapeHtml(friend.bio||"").replace(/\\n/g,"<br>")}</div>
+      ${isFounderAccount() && friend.uid!==myUid ? `<button class="grant-tick-btn ${friend.verified?'on':''}" id="grantTickBtn">${ICONS.verified} ${friend.verified?'Mavi Tiki Kaldır':'Mavi Tik Ver'}</button>` : ""}
       <div class="pbtn-row">
         <button class="follow-btn otherfollow-btn ${iFollow||requested?'following':''}">${followLabel}</button>
         ${locked ? "" : `<button class="msg-btn othermsg-btn">Mesaj At</button>`}
@@ -2738,6 +3595,20 @@ async function openOtherProfile(friend){
     else toast(`${friend.user} takip ediliyor`);
     toggleFollow(friend.uid, friend.private).then(()=> openOtherProfile(friend));
   });
+  const grantTickBtn = document.getElementById("grantTickBtn");
+  if(grantTickBtn){
+    grantTickBtn.addEventListener("click", async ()=>{
+      if(!isFounderAccount()) return;
+      const nextVerified = !friend.verified;
+      grantTickBtn.disabled = true;
+      try{
+        await db.collection("users").doc(friend.uid).update({verified: nextVerified});
+        friend.verified = nextVerified;
+        toast(nextVerified ? `${friend.user} artık onaylı ✅` : `${friend.user} için mavi tik kaldırıldı`);
+        openOtherProfile(friend);
+      }catch(e){ console.error("mavi tik güncellenemedi", e); toast("Bir hata oluştu, tekrar dene"); grantTickBtn.disabled = false; }
+    });
+  }
   const msgBtn = el.querySelector(".othermsg-btn");
   if(msgBtn){
     msgBtn.addEventListener("click", ()=>{
@@ -2808,7 +3679,7 @@ async function searchUsers(term){
       <div class="friend-row">
         <div class="friend-click" data-uid="${f.uid}" style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;cursor:pointer;">
           ${avatarCircle(48, f.color, initials(f.name), f.avatarPhoto)}
-          <div class="friend-meta"><div class="fname">${f.name}${f.isFounder?` <span class="founder-mini" style="width:14px;height:14px;">${ICONS.crown}</span>`:""}</div><div class="fsub">${f.user}${f.private?` · ${ICONS.lock} Gizli`:""}</div></div>
+          <div class="friend-meta"><div class="fname">${f.name}${f.isFounder?` <span class="founder-mini" style="width:14px;height:14px;">${ICONS.crown}</span>`:""}${f.verified?` <span class="verified-tick" style="width:13px;height:13px;">${ICONS.verified}</span>`:""}</div><div class="fsub">${f.user}${f.private?` · ${ICONS.lock} Gizli`:""}</div></div>
         </div>
         <div class="friend-btns" style="display:flex;flex-direction:column;gap:6px;">
           <button class="follow-btn ${followingSet.has(f.uid)||pendingSentRequests.has(f.uid)?'following':''}" data-uid="${f.uid}">${followingSet.has(f.uid)?'Takip Ediliyor':(pendingSentRequests.has(f.uid)?'İstek Gönderildi':'Takip Et')}</button>
@@ -2848,7 +3719,7 @@ function renderProfile(){
       ${pr.avatarPhoto
         ? `<div class="pavatar" style="background-image:url('${pr.avatarPhoto}');background-size:cover;background-position:center;"></div>`
         : `<div class="pavatar" style="background:${pr.color}">${initials(pr.name)}</div>`}
-      <div class="pname">${pr.name}</div>
+      <div class="pname-row"><div class="pname">${pr.name}</div>${verifiedTickHtml(myUid, true)}</div>
       <div class="puser">${pr.user}</div>
       ${pr.isFounder ? `<div class="founder-badge">${ICONS.crown} KURUCU</div>` : ""}
       <div class="pstats">
@@ -2857,6 +3728,10 @@ function renderProfile(){
         <div><b>${fmt(pr.likes)}</b><span>Beğeni</span></div>
       </div>
       <div class="pbio">${pr.bio.replace(/\\n/g,"<br>")}</div>
+      <div class="token-card">
+        <div class="token-amount">🪙 ${isFounderAccount() ? "∞" : fmt(pr.tokens||0)} <span>Jeton</span></div>
+        <button class="token-leaderboard-btn" id="openGlowoLiveBtn">${ICONS.trophy} GlowoLive En Değerlileri</button>
+      </div>
       <div class="pbtn-row">
         <button class="pbtn" id="editProfileBtn">Profili Düzenle</button>
         <button class="pbtn" id="shareProfileBtn">Paylaş</button>
@@ -2887,6 +3762,7 @@ function renderProfile(){
   });
   document.getElementById("editProfileBtn").addEventListener("click", openEditModal);
   document.getElementById("shareProfileBtn").addEventListener("click", ()=> toast("Profil bağlantısı kopyalandı"));
+  document.getElementById("openGlowoLiveBtn").addEventListener("click", openGlowoLive);
 }
 
 /* edit profile modal */
@@ -3609,61 +4485,66 @@ function renderSettings(){
   const s = state.settings;
   const el = document.getElementById("settingsScroll");
   el.innerHTML = `
-    <div class="section-label">Hesap</div>
+    <div class="section-label">${t("secAccount")}</div>
     <div class="settings-row clickable" id="setEditProfile">
-      <div><div class="srow-label">Profili Düzenle</div><div class="srow-sub">Ad, kullanıcı adı, biyografi, doğum tarihi</div></div>
+      <div><div class="srow-label">${t("rowEditProfile")}</div><div class="srow-sub">${t("rowEditProfileSub")}</div></div>
     </div>
-    <div class="section-label">İzinler</div>
+    <div class="section-label">${t("secPermissions")}</div>
     <div class="settings-row clickable" id="setMicPermission">
-      <div><div class="srow-label">Mikrofon İzni</div><div class="srow-sub" id="micPermSub">Sesli video, arama ve canlı yayın için gerekli</div></div>
+      <div><div class="srow-label">${t("rowMic")}</div><div class="srow-sub" id="micPermSub">${t("rowMicSub")}</div></div>
     </div>
     <div class="settings-row clickable" id="setCamPermission">
-      <div><div class="srow-label">Kamera İzni</div><div class="srow-sub" id="camPermSub">Video çekmek, görüntülü arama ve canlı yayın için gerekli</div></div>
+      <div><div class="srow-label">${t("rowCam")}</div><div class="srow-sub" id="camPermSub">${t("rowCamSub")}</div></div>
     </div>
-    <div class="section-label">Gizlilik</div>
-    ${toggleRow("privateAccount","Gizli Hesap","Sadece onayladığın kişiler videolarını görebilir")}
-    ${toggleRow("allowComments","Yorumlara İzin Ver","Herkes videolarına yorum yapabilir")}
+    <div class="section-label">${t("secPrivacy")}</div>
+    ${toggleRow("privateAccount",t("rowPrivateAccount"),t("rowPrivateAccountSub"))}
+    ${toggleRow("allowComments",t("rowAllowComments"),t("rowAllowCommentsSub"))}
     <div class="settings-row">
-      <div><div class="srow-label">Mesaj İzni</div><div class="srow-sub">Kimler sana mesaj gönderebilir</div></div>
+      <div><div class="srow-label">${t("rowDm")}</div><div class="srow-sub">${t("rowDmSub")}</div></div>
       <select id="setDm">
-        <option value="everyone" ${s.dmPermission==="everyone"?"selected":""}>Herkes</option>
-        <option value="following" ${s.dmPermission==="following"?"selected":""}>Takip Ettiklerim</option>
-        <option value="none" ${s.dmPermission==="none"?"selected":""}>Kimse</option>
+        <option value="everyone" ${s.dmPermission==="everyone"?"selected":""}>${t("dmEveryone")}</option>
+        <option value="following" ${s.dmPermission==="following"?"selected":""}>${t("dmFollowing")}</option>
+        <option value="none" ${s.dmPermission==="none"?"selected":""}>${t("dmNone")}</option>
       </select>
     </div>
-    <div class="section-label">Bildirimler</div>
-    ${toggleRow("notifLikes","Beğeniler","")}
-    ${toggleRow("notifComments","Yorumlar","")}
-    ${toggleRow("notifFollows","Yeni Takipçiler","")}
-    ${toggleRow("notifMessages","Mesajlar","")}
-    <div class="section-label">Görünüm</div>
+    <div class="section-label">${t("secNotif")}</div>
+    ${toggleRow("notifLikes",t("notifLikes"),"")}
+    ${toggleRow("notifComments",t("notifComments"),"")}
+    ${toggleRow("notifFollows",t("notifFollows"),"")}
+    ${toggleRow("notifMessages",t("notifMessages"),"")}
+    <div class="section-label">${t("secAppearance")}</div>
     <div class="settings-row">
-      <div><div class="srow-label">Tema</div><div class="srow-sub">Koyu veya açık görünüm</div></div>
+      <div><div class="srow-label">${t("rowTheme")}</div><div class="srow-sub">${t("rowThemeSub")}</div></div>
       <select id="setTheme">
-        <option value="dark" ${s.theme==="dark"?"selected":""}>Koyu</option>
-        <option value="light" ${s.theme==="light"?"selected":""}>Açık</option>
+        <option value="dark" ${s.theme==="dark"?"selected":""}>${t("themeDark")}</option>
+        <option value="light" ${s.theme==="light"?"selected":""}>${t("themeLight")}</option>
       </select>
     </div>
-    <div class="section-label">Oynatma</div>
-    ${toggleRow("autoplay","Otomatik Oynat","Akışta videolar otomatik başlasın")}
-    ${toggleRow("dataSaver","Veri Tasarrufu","Videoları düşük kalitede yükle")}
+    <div class="section-label">${t("secPlayback")}</div>
+    ${toggleRow("autoplay",t("rowAutoplay"),t("rowAutoplaySub"))}
+    ${toggleRow("dataSaver",t("rowDataSaver"),t("rowDataSaverSub"))}
     <div class="settings-row">
-      <div><div class="srow-label">Dil</div></div>
+      <div><div class="srow-label">${t("rowLang")}</div></div>
       <select id="setLang">
-        <option value="tr" ${s.language==="tr"?"selected":""}>Türkçe</option>
-        <option value="en" ${s.language==="en"?"selected":""}>English</option>
+        <option value="tr" ${s.language==="tr"?"selected":""}>${t("langTr")}</option>
+        <option value="en" ${s.language==="en"?"selected":""}>${t("langEn")}</option>
       </select>
     </div>
-    <div class="section-label">Diğer</div>
-    <div class="settings-row clickable" id="setHelp"><div class="srow-label">Yardım ve Destek</div></div>
-    <div class="settings-row"><div><div class="srow-label">Glowo Hakkında</div><div class="srow-sub">Sürüm ${APP_VERSION}</div></div></div>
-    <div class="settings-row clickable" id="setLogout"><div class="srow-label">Çıkış Yap</div></div>
-    <div class="settings-row clickable danger" id="setDelete"><div class="srow-label">Hesabı Sil</div></div>
+    <div class="section-label">${t("secSecurity")}</div>
+    <div class="settings-row clickable" id="setChangePassword">
+      <div><div class="srow-label">${t("rowChangePassword")}</div><div class="srow-sub">${t("rowChangePasswordSub")}</div></div>
+    </div>
+    <div class="section-label">${t("secOther")}</div>
+    <div class="settings-row clickable" id="setHelp"><div class="srow-label">${t("rowHelp")}</div></div>
+    <div class="settings-row"><div><div class="srow-label">${t("rowAbout")}</div><div class="srow-sub">${t("rowAboutSub", APP_VERSION)}</div></div></div>
+    <div class="settings-row clickable" id="setLogout"><div class="srow-label">${t("rowLogout")}</div></div>
+    <div class="settings-row clickable danger" id="setDelete"><div class="srow-label">${t("rowDelete")}</div></div>
   `;
   document.getElementById("setEditProfile").addEventListener("click", ()=>{ closeSettings(); openEditModal(); });
   document.getElementById("setHelp").addEventListener("click", openSupportSheet);
   document.getElementById("setMicPermission").addEventListener("click", requestMicPermission);
   document.getElementById("setCamPermission").addEventListener("click", requestCamPermission);
+  document.getElementById("setChangePassword").addEventListener("click", openChangePasswordSheet);
   refreshPermRows();
   el.querySelectorAll('input[type="checkbox"][data-key]').forEach(cb=>{
     cb.addEventListener("change", ()=>{
@@ -3672,14 +4553,14 @@ function renderSettings(){
       if(cb.dataset.key === "privateAccount"){
         db.collection("users").doc(myUid).update({private: cb.checked}).catch(()=>{});
       }
-      toast("Kaydedildi");
+      toast(t("toastSaved"));
     });
   });
-  document.getElementById("setDm").addEventListener("change", (e)=>{ state.settings.dmPermission = e.target.value; persistAccount(); toast("Kaydedildi"); });
+  document.getElementById("setDm").addEventListener("change", (e)=>{ state.settings.dmPermission = e.target.value; persistAccount(); toast(t("toastSaved")); });
   document.getElementById("setTheme").addEventListener("change", (e)=>{ state.settings.theme = e.target.value; applyTheme(); persistAccount(); });
-  document.getElementById("setLang").addEventListener("change", (e)=>{ state.settings.language = e.target.value; persistAccount(); toast("Dil tercihi kaydedildi"); });
-  document.getElementById("setLogout").addEventListener("click", ()=> confirmAction("Çıkış Yap", "Hesabından çıkış yapmak istediğine emin misin? Tekrar girmek için hesap oluşturman gerekecek.", doLogout));
-  document.getElementById("setDelete").addEventListener("click", ()=> confirmAction("Hesabı Sil", "Bu işlem geri alınamaz. Tüm profil bilgilerin bu cihazdan silinecek.", doDeleteAccount));
+  document.getElementById("setLang").addEventListener("change", (e)=>{ state.settings.language = e.target.value; persistAccount(); applyLanguage(); toast(t("toastLangSaved")); });
+  document.getElementById("setLogout").addEventListener("click", ()=> confirmAction(t("logoutTitle"), t("logoutText"), doLogout));
+  document.getElementById("setDelete").addEventListener("click", ()=> confirmAction(t("deleteTitle"), t("deleteText"), doDeleteAccount));
 }
 document.getElementById("settingsBtn").addEventListener("click", ()=>{ renderSettings(); document.getElementById("settingsView").classList.add("show"); });
 document.getElementById("settingsBack").addEventListener("click", closeSettings);
@@ -3810,12 +4691,13 @@ async function submitOnboarding(){
       if(docSnap.exists && docSnap.data().uid !== myUid){ throw new Error("USERNAME_TAKEN"); }
       tx.set(usernameRef, {uid: myUid});
     });
-    const isFounder = name.toLowerCase()==="yusuf";
+    const isFounder = name.toLowerCase()==="yusuf" && username===FOUNDER_USERNAME;
     const profileData = {
       name, user: "@"+username, username, bio:"Glowo'ya hoş geldim ✨",
       color: AV_COLORS[Math.floor(Math.random()*AV_COLORS.length)],
       following:0, followers:0, likes:0, birthdate:bdate, isFounder, avatarPhoto:null,
-      private:false, createdAt: FieldValue.serverTimestamp()
+      private:false, createdAt: FieldValue.serverTimestamp(),
+      tokens:10, tokenMilestoneFollowers:0, verified:false, giftTokensReceived:0
     };
     await db.collection("users").doc(myUid).set(profileData);
     hydrateProfileFromDoc(profileData);
@@ -3881,8 +4763,73 @@ document.getElementById("forgotPasswordSend").addEventListener("click", ()=>{
     toast("Gönderilemedi, tekrar dene");
   }).finally(()=>{ sendBtn.disabled = false; });
 });
+
+/* ===================== ŞİFRE DEĞİŞTİR (Ayarlar > Güvenlik) =====================
+   "Şifremi Unuttum" akışından farklı: burada kullanıcı ZATEN giriş yapmış
+   durumda, mevcut şifresini bilir. Firebase Auth'un reauthenticateWithCredential
+   + updatePassword akışıyla, sunucudan geçmeden (bakim.js gerekmeden) kendi
+   şifresini anında değiştirebiliyor. */
+function openChangePasswordSheet(){
+  document.getElementById("cpTitleText").textContent = t("cpTitle");
+  document.getElementById("cpDescText").textContent = t("cpDesc");
+  document.getElementById("cpCurrentLabel").textContent = t("cpCurrent");
+  document.getElementById("cpNewLabel").textContent = t("cpNew");
+  document.getElementById("cpConfirmLabel").textContent = t("cpConfirm");
+  document.getElementById("cpCancelBtn").textContent = t("cpCancel");
+  document.getElementById("cpSubmitBtn").textContent = t("cpSubmit");
+  document.getElementById("cpCurrentInput").value = "";
+  document.getElementById("cpNewInput").value = "";
+  document.getElementById("cpConfirmInput").value = "";
+  document.getElementById("changePasswordOverlay").classList.add("show");
+}
+function closeChangePasswordSheet(){
+  document.getElementById("changePasswordOverlay").classList.remove("show");
+}
+document.getElementById("cpCancelBtn").addEventListener("click", closeChangePasswordSheet);
+document.getElementById("changePasswordOverlay").addEventListener("click", (e)=>{
+  if(e.target.id === "changePasswordOverlay") closeChangePasswordSheet();
+});
+document.getElementById("cpSubmitBtn").addEventListener("click", async ()=>{
+  const currentPassword = document.getElementById("cpCurrentInput").value;
+  const newPassword = document.getElementById("cpNewInput").value;
+  const confirmPassword = document.getElementById("cpConfirmInput").value;
+  if(!currentPassword || !newPassword || !confirmPassword){ toast(t("cpErrEmpty")); return; }
+  if(newPassword !== confirmPassword){ toast(t("cpErrMismatch")); return; }
+  if(newPassword.length < 6){ toast(t("cpErrWeak")); return; }
+  const submitBtn = document.getElementById("cpSubmitBtn");
+  submitBtn.disabled = true;
+  try{
+    const user = auth.currentUser;
+    const authEmail = usernameToAuthEmail((state.profile.username || "").replace(/^@+/,""));
+    const credential = firebase.auth.EmailAuthProvider.credential(authEmail, currentPassword);
+    await user.reauthenticateWithCredential(credential);
+    await user.updatePassword(newPassword);
+    closeChangePasswordSheet();
+    toast(t("cpSuccess"));
+  }catch(e){
+    console.error("şifre güncellenemedi", e);
+    if(e && (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential" || e.code === "auth/invalid-login-credentials")){
+      toast(t("cpErrWrong"));
+    } else if(e && e.code === "auth/weak-password"){
+      toast(t("cpErrWeak"));
+    } else if(e && e.code === "auth/too-many-requests"){
+      toast(t("cpErrTooMany"));
+    } else {
+      toast(t("cpErrGeneric"));
+    }
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
 async function submitLogin(){
-  const username = document.getElementById("loginUsername").value.trim().replace(/^@+/,"").replace(/[^a-zA-Z0-9_]/g,"").toLowerCase();
+  const rawLoginInput = document.getElementById("loginUsername").value.trim().toLowerCase();
+  // Kurucu e-postası ("yusuf@teyek.com") yazılırsa kurucunun kendi kullanıcı
+  // adına geçiyoruz — hâlâ kurucunun GERÇEK şifresi gerekiyor, bu sadece bir
+  // giriş kısayolu, güvenlik atlaması değil.
+  const username = rawLoginInput === FOUNDER_LOGIN_EMAIL
+    ? FOUNDER_USERNAME
+    : rawLoginInput.replace(/^@+/,"").replace(/[^a-zA-Z0-9_]/g,"");
   const password = document.getElementById("loginPassword").value;
   const errEl = document.getElementById("loginError");
   errEl.classList.remove("show");
@@ -3923,6 +4870,7 @@ function applyTheme(){
 }
 function startApp(){
   applyTheme();
+  applyLanguage();
   registerPushNotifications();
   subscribeFeed();
   subscribeFollowing();
@@ -3932,6 +4880,7 @@ function startApp(){
   subscribeBlocks();
   subscribeMyFollowRequests();
   subscribeIncomingFollowRequests();
+  subscribeStories();
   renderFeed();
 }
 /* Fades the whole onboarding overlay out, then reveals the app underneath —
