@@ -742,6 +742,82 @@
     100%{ opacity:0; transform:translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) rotate(var(--rot)) scale(.9); }
   }
 
+  /* 😘 Öpücük: hızlı iki sıçramalı, hafif sallanarak yükselir */
+  .gift-kiss .gp-icon{ animation:gpKiss var(--gp-dur,1.6s) ease forwards; }
+  @keyframes gpKiss{
+    0%{ transform:translateY(18px) scale(.5) rotate(0deg); }
+    18%{ transform:translateY(-4px) scale(1.35) rotate(-8deg); }
+    30%{ transform:translateY(0) scale(1) rotate(6deg); }
+    45%{ transform:translateY(-18px) scale(1.25) rotate(-6deg); }
+    100%{ transform:translateY(-95px) scale(.85) rotate(4deg); }
+  }
+  /* 👏 Alkış: iki kez "çırpma" darbesi sonra yükselir */
+  .gift-clap .gp-icon{ animation:gpClap var(--gp-dur,1.8s) ease forwards; }
+  @keyframes gpClap{
+    0%{ transform:translateY(16px) scale(.6) rotate(0deg); }
+    10%{ transform:translateY(0) scale(1.2) rotate(-10deg); }
+    20%{ transform:translateY(0) scale(.95) rotate(10deg); }
+    30%{ transform:translateY(-4px) scale(1.25) rotate(-10deg); }
+    40%{ transform:translateY(-4px) scale(1) rotate(0deg); }
+    70%{ transform:translateY(-55px) scale(1.05) rotate(0deg); }
+    100%{ transform:translateY(-110px) scale(.9) rotate(0deg); }
+  }
+  /* 🎈 Balon: geniş sallanarak yavaşça süzülür */
+  .gift-balloon .gp-icon{ animation:gpBalloon var(--gp-dur,2.6s) ease-in-out forwards; }
+  @keyframes gpBalloon{
+    0%{ transform:translate(0,24px) scale(.5) rotate(0deg); }
+    15%{ transform:translate(0,0) scale(1.1) rotate(0deg); }
+    35%{ transform:translate(-26px,-45px) scale(1) rotate(-8deg); }
+    55%{ transform:translate(24px,-90px) scale(1) rotate(8deg); }
+    75%{ transform:translate(-18px,-135px) scale(.97) rotate(-6deg); }
+    100%{ transform:translate(14px,-180px) scale(.92) rotate(4deg); }
+  }
+  /* 🌈 Gökkuşağı: yay çizerek bir uçtan öbür uca geçer */
+  .gift-rainbow .gp-icon{ animation:gpRainbow var(--gp-dur,2.4s) cubic-bezier(.3,.9,.4,1) forwards; }
+  @keyframes gpRainbow{
+    0%{ transform:translate(-110px,50px) scale(.4) rotate(-8deg); }
+    25%{ transform:translate(-55px,-20px) scale(1.1) rotate(-3deg); }
+    50%{ transform:translate(0,-55px) scale(1) rotate(0deg); }
+    75%{ transform:translate(55px,-25px) scale(1.05) rotate(3deg); }
+    100%{ transform:translate(115px,45px) scale(.9) rotate(8deg); }
+  }
+  /* 💸 Para Yağmuru: ana ikon yükselirken etrafından banknotlar yağıyor */
+  .gift-moneyrain .gp-icon{ animation:gpMoney var(--gp-dur,2.6s) ease forwards; }
+  @keyframes gpMoney{
+    0%{ transform:translateY(20px) scale(.4) rotate(0deg); }
+    16%{ transform:translateY(0) scale(1.3) rotate(-6deg); }
+    35%{ transform:translateY(-10px) scale(1.05) rotate(4deg); }
+    60%{ transform:translateY(-40px) scale(1.15) rotate(-3deg); }
+    100%{ transform:translateY(-120px) scale(.95) rotate(0deg); }
+  }
+  .gp-bill{ position:absolute; top:-30px; font-size:20px; opacity:0;
+    animation:gpBillFall var(--gp-dur,2.6s) ease-in forwards; }
+  @keyframes gpBillFall{
+    0%{ opacity:0; transform:translate(0,0) rotate(0deg); }
+    10%{ opacity:1; }
+    100%{ opacity:0; transform:translate(var(--tx,0),260px) rotate(var(--rot,0deg)); }
+  }
+  /* 🦄 Unicorn: dört nala soldan sağa zıplayarak geçer */
+  .gift-unicorn .gp-icon{ animation:gpUnicorn var(--gp-dur,2.6s) ease-in-out forwards; }
+  @keyframes gpUnicorn{
+    0%{ transform:translate(-130px,10px) scale(.6) rotate(0deg); }
+    15%{ transform:translate(-90px,-15px) scale(1.15) rotate(-6deg); }
+    30%{ transform:translate(-50px,0) scale(1) rotate(4deg); }
+    45%{ transform:translate(-10px,-18px) scale(1.1) rotate(-4deg); }
+    60%{ transform:translate(30px,0) scale(1) rotate(4deg); }
+    75%{ transform:translate(70px,-18px) scale(1.08) rotate(-3deg); }
+    100%{ transform:translate(120px,-6px) scale(.95) rotate(0deg); }
+  }
+  /* 🌌 Galaksi: dönerek/parlayarak büyür, sonunda hafif yükselir */
+  .gift-galaxy .gp-icon{ animation:gpGalaxy var(--gp-dur,3s) cubic-bezier(.25,1,.4,1) forwards; filter:drop-shadow(0 0 18px rgba(139,92,246,.85)); }
+  @keyframes gpGalaxy{
+    0%{ transform:scale(.2) rotate(-180deg); }
+    30%{ transform:scale(1.25) rotate(20deg); }
+    50%{ transform:scale(1) rotate(-8deg); }
+    70%{ transform:scale(1.15) rotate(4deg); }
+    100%{ transform:scale(1.1) rotate(0deg) translateY(-20px); }
+  }
+
   /* ---------- Profil jeton kartı + GlowoLive ---------- */
   .token-card{ margin:14px 16px 4px; background:var(--panel-2); border:1px solid var(--border); border-radius:14px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .token-card .token-amount{ font-size:14.5px; font-weight:800; display:flex; align-items:center; gap:6px; }
@@ -1003,6 +1079,7 @@
     <div class="story-viewer-head">
       <div class="favatar" id="storyViewerAvatar" style="width:30px;height:30px;font-size:12px;"></div>
       <div class="svh-name" id="storyViewerName"></div>
+      <button id="storyViewerAddBtn" title="Ekle" style="display:none;"></button>
       <button id="storyViewerDeleteBtn" title="Sil" style="display:none;"></button>
       <button id="storyViewerClose">✕</button>
     </div>
@@ -1544,6 +1621,7 @@ const STRINGS = {
     commentCount:(n)=>`${n} yorum`,
     giftPanelTitle:"Hediye Gönder", giftBalanceLabel:"Bakiyen", giftBalanceUnit:"Jeton",
     storyComposeTitle:"Hikaye Oluştur",
+    storyMaxReached:"En fazla 3 hikaye paylaşabilirsin. Yeni eklemek için önce birini sil.",
     glowoLiveTitle:"GlowoLive En Değerlileri",
     secAccount:"Hesap", rowEditProfile:"Profili Düzenle", rowEditProfileSub:"Ad, kullanıcı adı, biyografi, doğum tarihi",
     secPermissions:"İzinler", rowMic:"Mikrofon İzni", rowMicSub:"Sesli video, arama ve canlı yayın için gerekli",
@@ -1580,6 +1658,7 @@ const STRINGS = {
     commentCount:(n)=>`${n} comment${n===1?"":"s"}`,
     giftPanelTitle:"Send Gift", giftBalanceLabel:"Your balance", giftBalanceUnit:"Tokens",
     storyComposeTitle:"Create Story",
+    storyMaxReached:"You can have up to 3 stories at a time. Delete one to add a new one.",
     glowoLiveTitle:"GlowoLive Top Gifters",
     secAccount:"Account", rowEditProfile:"Edit Profile", rowEditProfileSub:"Name, username, bio, birth date",
     secPermissions:"Permissions", rowMic:"Microphone Access", rowMicSub:"Needed for voice video, calls and live streams",
@@ -1821,6 +1900,7 @@ function subscribeFollowing(){
       followingSet = new Set(snap.docs.map(d=>d.data().target));
       state.posts.forEach(p=>{ p.following = followingSet.has(p.uid) || p.uid===myUid; });
       renderFeed();
+      renderStoriesBar(); // hikayeler şeridi sadece takip ettiklerini gösteriyor — liste değişince tazele
     }, err=>{ console.error("following listener error", err); });
 }
 
@@ -2674,15 +2754,22 @@ document.getElementById("supportSend").addEventListener("click", ()=>{
    davranır. En düşük katmandan en yükseğe doğru animasyon kalitesi artar
    (bkz. .gift-pop.tier1..tier5 CSS). */
 const GIFTS = [
-  {id:"rose",     name:"Gül",               icon:"🌹", cost:1,     tier:1},
-  {id:"heart",    name:"Kalp",              icon:"❤️", cost:5,     tier:1},
-  {id:"star",     name:"Yıldız",            icon:"⭐", cost:15,    tier:2},
-  {id:"fire",     name:"Ateş",              icon:"🔥", cost:40,    tier:2},
-  {id:"diamond",  name:"Elmas",             icon:"💎", cost:100,   tier:3},
-  {id:"rocket",   name:"Roket",             icon:"🚀", cost:250,   tier:3},
-  {id:"crown",    name:"Taç",               icon:"👑", cost:600,   tier:4},
-  {id:"glowstar", name:"Glowo Yıldızı",     icon:"🌟", cost:1500,  tier:4},
-  {id:"glowocup", name:"GlowoLive Kupası",  icon:"🏆", cost:29999, tier:5}
+  {id:"rose",       name:"Gül",               icon:"🌹", cost:1,     tier:1},
+  {id:"kiss",       name:"Öpücük",            icon:"😘", cost:2,     tier:1},
+  {id:"heart",      name:"Kalp",              icon:"❤️", cost:5,     tier:1},
+  {id:"clap",       name:"Alkış",             icon:"👏", cost:8,     tier:1},
+  {id:"star",       name:"Yıldız",            icon:"⭐", cost:15,    tier:2},
+  {id:"balloon",    name:"Balon",             icon:"🎈", cost:25,    tier:2},
+  {id:"fire",       name:"Ateş",              icon:"🔥", cost:40,    tier:2},
+  {id:"rainbow",    name:"Gökkuşağı",         icon:"🌈", cost:70,    tier:2},
+  {id:"diamond",    name:"Elmas",             icon:"💎", cost:100,   tier:3},
+  {id:"moneyrain",  name:"Para Yağmuru",      icon:"💸", cost:180,   tier:3},
+  {id:"rocket",     name:"Roket",             icon:"🚀", cost:250,   tier:3},
+  {id:"crown",      name:"Taç",               icon:"👑", cost:600,   tier:4},
+  {id:"unicorn",    name:"Unicorn",           icon:"🦄", cost:900,   tier:4},
+  {id:"glowstar",   name:"Glowo Yıldızı",     icon:"🌟", cost:1500,  tier:4},
+  {id:"galaxy",     name:"Galaksi",           icon:"🌌", cost:5000,  tier:4},
+  {id:"glowocup",   name:"GlowoLive Kupası",  icon:"🏆", cost:29999, tier:5}
 ];
 let activeGiftPostId = null;
 function openGiftPanel(){
@@ -2746,7 +2833,15 @@ async function sendGift(gift){
       hasWrite = true;
     }
     if(p.uid && p.uid!==myUid){
-      batch.update(db.collection("users").doc(p.uid), {giftTokensReceived: FieldValue.increment(gift.cost)});
+      // giftTokensReceived: kalıcı "ne kadar hediye aldı" istatistiği (GlowoLive
+      // sıralaması bunu kullanır, harcansa bile hiç düşmez). tokens: alıcının
+      // harcayabileceği gerçek jeton bakiyesi — gönderilen hediyenin değeri
+      // kadar alıcıya da jeton geçiyor (ör. 1 jetonluk gül -> alıcıya +1 jeton,
+      // 5000 jetonluk galaksi -> alıcıya +5000 jeton).
+      batch.update(db.collection("users").doc(p.uid), {
+        giftTokensReceived: FieldValue.increment(gift.cost),
+        tokens: FieldValue.increment(gift.cost)
+      });
       hasWrite = true;
     }
     if(hasWrite) await batch.commit();
@@ -2770,10 +2865,12 @@ async function sendGift(gift){
    hediyenin kendine özgü bir hareketi var (bkz. .gift-<id> CSS kuralları);
    roket bir iz bırakır, GlowoLive Kupası konfeti patlatır. */
 const GIFT_ANIM_MS = {
-  rose:1800, heart:2000, star:2200, fire:2400, diamond:2600,
-  rocket:2400, crown:2600, glowstar:2800, glowocup:3200
+  rose:1800, kiss:1600, heart:2000, clap:1800, star:2200, balloon:2600,
+  fire:2400, rainbow:2400, diamond:2600, moneyrain:2600, rocket:2400,
+  crown:2600, unicorn:2600, glowstar:2800, galaxy:3000, glowocup:3200
 };
 const CONFETTI_COLORS = ["#ffd76a","#ff6b81","#7ee8fa","#a78bfa","#4ade80","#f97316"];
+const MONEY_EMOJIS = ["💵","💴","💶"];
 function showGiftAnimation(postId, gift){
   const postEl = document.querySelector(`.post[data-id="${postId}"]`);
   if(!postEl) return;
@@ -2805,6 +2902,20 @@ function showGiftAnimation(postId, gift){
       pop.appendChild(bit);
     }
   }
+  if(gift.id==="moneyrain"){
+    for(let i=0;i<10;i++){
+      const bill = document.createElement("span");
+      bill.className = "gp-bill";
+      bill.textContent = MONEY_EMOJIS[i % MONEY_EMOJIS.length];
+      const tx = (Math.random()*160-80).toFixed(0)+"px";
+      bill.style.setProperty("--tx", tx);
+      bill.style.setProperty("--rot", (Math.random()*260-130).toFixed(0)+"deg");
+      bill.style.setProperty("--gp-dur", duration+"ms");
+      bill.style.left = (30 + Math.random()*40).toFixed(0)+"%";
+      bill.style.animationDelay = (Math.random()*0.5).toFixed(2)+"s";
+      pop.appendChild(bill);
+    }
+  }
   postEl.appendChild(pop);
   setTimeout(()=>{ if(pop.parentNode) pop.remove(); }, duration + 200);
 }
@@ -2822,68 +2933,98 @@ const STORY_BACKGROUNDS = [
   "#111318"
 ];
 const STORY_TTL_MS = 24*60*60*1000;
+const STORY_MAX_PER_USER = 3;
 let myStories = [];
 let storiesByUser = [];
 let pendingStoryBg = STORY_BACKGROUNDS[0];
 
+/* Bir kullanıcı en fazla STORY_MAX_PER_USER (3) hikaye biriktirebilir — daha
+   fazlası oluşturulmuşsa (eski verilerden kalma vs.) fazlalık en YENİ 3'e
+   indiriliyor, en eski story(ler) hiç gösterilmiyor. */
 function subscribeStories(){
   if(unsubStories) unsubStories();
   unsubStories = db.collection("stories").orderBy("createdAt","desc").limit(300)
     .onSnapshot(snap=>{
       const now = Date.now();
+      const getMs = s => s.createdAt && s.createdAt.toMillis ? s.createdAt.toMillis() : 0;
+      // "all" en yeniden en eskiye sıralı (orderBy createdAt desc).
       const all = snap.docs.map(d=>({id:d.id, ...d.data()}))
-        .filter(s=>{
-          const ms = s.createdAt && s.createdAt.toMillis ? s.createdAt.toMillis() : 0;
-          return ms && (now - ms) < STORY_TTL_MS;
-        });
-      myStories = all.filter(s=>s.uid===myUid);
-      const seen = new Set();
-      storiesByUser = [];
+        .filter(s=>{ const ms = getMs(s); return ms && (now - ms) < STORY_TTL_MS; });
+
+      // Kendi hikayelerim: en yeni STORY_MAX_PER_USER tanesi, kronolojik
+      // sırayla (eskiden yeniye) izlenebilsin diye ters çevriliyor.
+      myStories = all.filter(s=>s.uid===myUid).slice(0, STORY_MAX_PER_USER).reverse();
+
+      // Diğer kullanıcılar: her biri için en yeni STORY_MAX_PER_USER hikaye,
+      // kullanıcı içinde eskiden yeniye sıralı, kullanıcılar arası sıralama
+      // ise "en yeni hikayesi olan en önde" (all zaten bu sırada geliyor).
+      const byUid = new Map();
       all.forEach(s=>{
-        if(s.uid===myUid || seen.has(s.uid)) return;
-        seen.add(s.uid);
-        storiesByUser.push(s);
+        if(s.uid===myUid) return;
+        if(!byUid.has(s.uid)) byUid.set(s.uid, []);
+        const arr = byUid.get(s.uid);
+        if(arr.length < STORY_MAX_PER_USER) arr.push(s);
       });
+      storiesByUser = [];
+      byUid.forEach(arr=>{ storiesByUser.push(...arr.slice().reverse()); });
+
       // Süresi geçmiş kendi hikayelerimi arka planda sessizce temizliyoruz
       // (Cloud Functions yok, bu yüzden temizlik istemci tarafında).
       snap.docs.forEach(d=>{
         const data = d.data();
         if(data.uid!==myUid) return;
-        const ms = data.createdAt && data.createdAt.toMillis ? data.createdAt.toMillis() : 0;
+        const ms = getMs(data);
         if(ms && (now - ms) >= STORY_TTL_MS) db.collection("stories").doc(d.id).delete().catch(()=>{});
       });
       renderStoriesBar();
     }, err=>console.error("hikaye listener hatası", err));
 }
 
+/* Hikayeler şeridinde SADECE takip ettiğin kişilerin hikayeleri görünür
+   (+ her zaman kendi hikayen). followingSet subscribeFollowing() tarafından
+   canlı tutuluyor; o değiştiğinde de bu bar yeniden çiziliyor. */
 function renderStoriesBar(){
   const el = document.getElementById("storiesBar");
   if(!el || !myUid) return;
-  const myLatest = myStories[0];
+  const myLatest = myStories[myStories.length-1];
   const myBubble = `
     <div class="story-bubble" id="myStoryBubble">
       <div class="story-ring ${myLatest?'has-story':''}">
         <div class="story-avatar-inner" style="${state.profile.avatarPhoto?`background-image:url('${state.profile.avatarPhoto}');`:`background:${state.profile.color};`}">${state.profile.avatarPhoto?"":initials(state.profile.name||"?")}</div>
-        <div class="story-add-badge">${ICONS.storyPlus}</div>
+        <div class="story-add-badge" id="storyAddBadge">${ICONS.storyPlus}</div>
       </div>
       <div class="sname">Hikayen</div>
     </div>`;
-  const others = storiesByUser.map(s=>`
-    <div class="story-bubble" data-uid="${s.uid}">
+  const followSet = (typeof followingSet !== "undefined" && followingSet) ? followingSet : new Set();
+  const visibleOthers = storiesByUser.filter(s=>followSet.has(s.uid));
+  const uniqueOtherUids = [];
+  visibleOthers.forEach(s=>{ if(!uniqueOtherUids.includes(s.uid)) uniqueOtherUids.push(s.uid); });
+  const others = uniqueOtherUids.map(uid=>{
+    const s = visibleOthers.find(x=>x.uid===uid);
+    return `
+    <div class="story-bubble" data-uid="${uid}">
       <div class="story-ring has-story">
         <div class="story-avatar-inner" style="${s.avatarPhoto?`background-image:url('${s.avatarPhoto}');`:`background:${s.color||'#8b5cf6'};`}">${s.avatarPhoto?"":initials(s.username||"?")}</div>
       </div>
       <div class="sname">${escapeHtml((s.username||"").replace(/^@+/,""))}</div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
   el.innerHTML = myBubble + others;
   document.getElementById("myStoryBubble").addEventListener("click", ()=>{
     if(myStories.length) openStoryViewer(myStories, 0);
     else openStoryCompose();
   });
+  // "+" rozeti her zaman "yeni hikaye ekle" demek — mevcut hikayen olsa bile
+  // (3'e kadar). stopPropagation ile üstteki bubble'ın "görüntüle" tıklamasını
+  // tetiklemesini engelliyoruz.
+  document.getElementById("storyAddBadge").addEventListener("click", (e)=>{
+    e.stopPropagation();
+    openStoryCompose();
+  });
   el.querySelectorAll(".story-bubble[data-uid]").forEach(b=>{
     b.addEventListener("click", ()=>{
-      const idx = storiesByUser.findIndex(s=>s.uid===b.dataset.uid);
-      if(idx>-1) openStoryViewer(storiesByUser, idx);
+      const idx = visibleOthers.findIndex(s=>s.uid===b.dataset.uid);
+      if(idx>-1) openStoryViewer(visibleOthers, idx);
     });
   });
 }
@@ -2901,6 +3042,10 @@ function renderStoryBgRow(){
   });
 }
 function openStoryCompose(){
+  if(myStories.length >= STORY_MAX_PER_USER){
+    toast(t("storyMaxReached"));
+    return;
+  }
   pendingStoryBg = STORY_BACKGROUNDS[0];
   document.getElementById("storyComposeText").value = "";
   document.getElementById("storyComposePreview").style.background = pendingStoryBg;
@@ -2914,6 +3059,7 @@ document.getElementById("storyComposeOverlay").addEventListener("click", (e)=>{ 
 document.getElementById("storyComposeShare").addEventListener("click", async ()=>{
   const text = document.getElementById("storyComposeText").value.trim();
   if(!text){ toast("Önce bir şeyler yaz"); return; }
+  if(myStories.length >= STORY_MAX_PER_USER){ toast(t("storyMaxReached")); closeStoryCompose(); return; }
   const btn = document.getElementById("storyComposeShare");
   btn.disabled = true;
   try{
@@ -2954,6 +3100,7 @@ function showStoryAt(idx){
   if(s.avatarPhoto){ av.style.background = `url('${s.avatarPhoto}') center/cover`; av.textContent=""; }
   else { av.style.background = s.color||"#8b5cf6"; av.textContent = initials(s.username||"?"); }
   document.getElementById("storyViewerDeleteBtn").style.display = (s.uid===myUid) ? "flex" : "none";
+  document.getElementById("storyViewerAddBtn").style.display = (s.uid===myUid && myStories.length < STORY_MAX_PER_USER) ? "flex" : "none";
   document.querySelectorAll("#storyViewerBars .sv-bar").forEach((bar,i)=>{
     bar.classList.toggle("done", i<idx);
     const inner = bar.querySelector("i");
@@ -2975,6 +3122,11 @@ function closeStoryViewer(){
 document.getElementById("storyViewerClose").addEventListener("click", closeStoryViewer);
 document.getElementById("storyViewerPrev").addEventListener("click", ()=> showStoryAt(storyViewerIndex-1));
 document.getElementById("storyViewerNext").addEventListener("click", ()=> showStoryAt(storyViewerIndex+1));
+document.getElementById("storyViewerAddBtn").innerHTML = ICONS.storyPlus;
+document.getElementById("storyViewerAddBtn").addEventListener("click", ()=>{
+  closeStoryViewer();
+  openStoryCompose();
+});
 document.getElementById("storyViewerDeleteBtn").innerHTML = ICONS.trash;
 document.getElementById("storyViewerDeleteBtn").addEventListener("click", async ()=>{
   const s = storyViewerList[storyViewerIndex];
