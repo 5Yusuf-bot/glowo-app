@@ -1,13 +1,3 @@
-# Codemagic build yapılandırması (başlangıç şablonu)
-# Codemagic bu dosyayı deponda otomatik bulur. Yine de Codemagic paneline
-# girip "Capacitor" proje sihirbazını kullanman, kendi kendine benzer bir
-# dosya önerecektir - bu dosyayı ondan sonra karşılaştırıp güncelleyebilirsin.
-#
-# Doldurman gerekenler:
-#  - Codemagic panelinde "App Store Connect" entegrasyonunu (API key ile) kurup
-#    aşağıdaki "codemagic_api_key" ismini kendi verdiğin isimle eşleştir.
-#  - bundle_identifier: capacitor.config.json'daki appId ile aynı olmalı.
-
 workflows:
   ios-release:
     name: Glowo - iOS Release
@@ -49,6 +39,24 @@ workflows:
         script: |
           npx cap add ios || true
           npx cap sync ios
+      - name: Kamera/Mikrofon izinlerini Info.plist'e ekle
+        script: |
+          # android/ios klasörleri her build'de npx cap add ile SIFIRDAN
+          # üretildiği için (repoda kalıcı durmuyorlar), kamera/mikrofon izin
+          # açıklamalarını burada, her build'de otomatik olarak enjekte
+          # ediyoruz. PlistBuddy macOS'ta hazır gelir, Add zaten var olan bir
+          # anahtarda hata verir ama build'i durdurmasın diye || true koyduk.
+          PLIST="ios/App/App/Info.plist"
+          if [ -f "$PLIST" ]; then
+            /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'Glowo video çekme, görüntülü arama ve canlı yayın için kameranıza erişim istiyor.'" "$PLIST" 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'Glowo sesli/görüntülü arama, canlı yayın ve video kaydı için mikrofonunuza erişim istiyor.'" "$PLIST" 2>/dev/null || true
+            echo "--- Info.plist izin anahtarları ---"
+            /usr/libexec/PlistBuddy -c "Print :NSCameraUsageDescription" "$PLIST" 2>/dev/null
+            /usr/libexec/PlistBuddy -c "Print :NSMicrophoneUsageDescription" "$PLIST" 2>/dev/null
+          else
+            echo "HATA: Info.plist bulunamadı: $PLIST"
+            exit 1
+          fi
       - name: Uygulama ikonu ve açılış ekranını oluştur
         script: |
           npm install @capacitor/assets --save-dev
@@ -128,6 +136,19 @@ workflows:
         script: |
           npx cap add ios || true
           npx cap sync ios
+      - name: Kamera/Mikrofon izinlerini Info.plist'e ekle
+        script: |
+          PLIST="ios/App/App/Info.plist"
+          if [ -f "$PLIST" ]; then
+            /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'Glowo video çekme, görüntülü arama ve canlı yayın için kameranıza erişim istiyor.'" "$PLIST" 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'Glowo sesli/görüntülü arama, canlı yayın ve video kaydı için mikrofonunuza erişim istiyor.'" "$PLIST" 2>/dev/null || true
+            echo "--- Info.plist izin anahtarları ---"
+            /usr/libexec/PlistBuddy -c "Print :NSCameraUsageDescription" "$PLIST" 2>/dev/null
+            /usr/libexec/PlistBuddy -c "Print :NSMicrophoneUsageDescription" "$PLIST" 2>/dev/null
+          else
+            echo "HATA: Info.plist bulunamadı: $PLIST"
+            exit 1
+          fi
       - name: Uygulama ikonu ve açılış ekranını oluştur
         script: |
           npm install @capacitor/assets --save-dev
@@ -204,6 +225,38 @@ workflows:
         script: |
           npx cap add android || true
           npx cap sync android
+      - name: Kamera/Mikrofon izinlerini AndroidManifest.xml'e ekle
+        script: |
+          # android/ klasörü her build'de npx cap add ile SIFIRDAN üretildiği
+          # için (repoda kalıcı durmuyor), kamera/mikrofon izinlerini burada,
+          # her build'de otomatik olarak <application> etiketinden hemen önce
+          # enjekte ediyoruz. awk kullanıyoruz çünkü çok satırlı ekleme sed'den
+          # daha güvenilir ve her ortamda (Linux/Mac) hazır geliyor.
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ]; then
+            if ! grep -q "android.permission.CAMERA" "$MANIFEST"; then
+              awk '
+                /<application/ && !done {
+                  print "    <uses-permission android:name=\"android.permission.CAMERA\" />"
+                  print "    <uses-permission android:name=\"android.permission.RECORD_AUDIO\" />"
+                  print "    <uses-permission android:name=\"android.permission.MODIFY_AUDIO_SETTINGS\" />"
+                  print "    <uses-feature android:name=\"android.hardware.camera\" android:required=\"false\" />"
+                  print "    <uses-feature android:name=\"android.hardware.camera.autofocus\" android:required=\"false\" />"
+                  print "    <uses-feature android:name=\"android.hardware.microphone\" android:required=\"false\" />"
+                  done=1
+                }
+                { print }
+              ' "$MANIFEST" > "$MANIFEST.tmp" && mv "$MANIFEST.tmp" "$MANIFEST"
+              echo "Kamera/Mikrofon izinleri AndroidManifest.xml'e eklendi."
+            else
+              echo "İzinler zaten mevcut, atlanıyor."
+            fi
+            echo "--- AndroidManifest.xml (son hali) ---"
+            cat "$MANIFEST"
+          else
+            echo "HATA: AndroidManifest.xml bulunamadı: $MANIFEST"
+            exit 1
+          fi
       - name: Push bildirimleri için Google Services'i kur
         script: |
           # google-services.json, Firebase Console'da "Android uygulaması ekle"
@@ -372,6 +425,33 @@ workflows:
         script: |
           npx cap add android || true
           npx cap sync android
+      - name: Kamera/Mikrofon izinlerini AndroidManifest.xml'e ekle
+        script: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ]; then
+            if ! grep -q "android.permission.CAMERA" "$MANIFEST"; then
+              awk '
+                /<application/ && !done {
+                  print "    <uses-permission android:name=\"android.permission.CAMERA\" />"
+                  print "    <uses-permission android:name=\"android.permission.RECORD_AUDIO\" />"
+                  print "    <uses-permission android:name=\"android.permission.MODIFY_AUDIO_SETTINGS\" />"
+                  print "    <uses-feature android:name=\"android.hardware.camera\" android:required=\"false\" />"
+                  print "    <uses-feature android:name=\"android.hardware.camera.autofocus\" android:required=\"false\" />"
+                  print "    <uses-feature android:name=\"android.hardware.microphone\" android:required=\"false\" />"
+                  done=1
+                }
+                { print }
+              ' "$MANIFEST" > "$MANIFEST.tmp" && mv "$MANIFEST.tmp" "$MANIFEST"
+              echo "Kamera/Mikrofon izinleri AndroidManifest.xml'e eklendi."
+            else
+              echo "İzinler zaten mevcut, atlanıyor."
+            fi
+            echo "--- AndroidManifest.xml (son hali) ---"
+            cat "$MANIFEST"
+          else
+            echo "HATA: AndroidManifest.xml bulunamadı: $MANIFEST"
+            exit 1
+          fi
       - name: Push bildirimleri için Google Services'i kur
         script: |
           # google-services.json, Firebase Console'da "Android uygulaması ekle"
@@ -555,6 +635,31 @@ workflows:
         script: |
           npx cap add android || true
           npx cap sync android
+      - name: Kamera/Mikrofon izinlerini AndroidManifest.xml'e ekle
+        script: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ]; then
+            if ! grep -q "android.permission.CAMERA" "$MANIFEST"; then
+              awk '
+                /<application/ && !done {
+                  print "    <uses-permission android:name=\"android.permission.CAMERA\" />"
+                  print "    <uses-permission android:name=\"android.permission.RECORD_AUDIO\" />"
+                  print "    <uses-permission android:name=\"android.permission.MODIFY_AUDIO_SETTINGS\" />"
+                  print "    <uses-feature android:name=\"android.hardware.camera\" android:required=\"false\" />"
+                  print "    <uses-feature android:name=\"android.hardware.camera.autofocus\" android:required=\"false\" />"
+                  print "    <uses-feature android:name=\"android.hardware.microphone\" android:required=\"false\" />"
+                  done=1
+                }
+                { print }
+              ' "$MANIFEST" > "$MANIFEST.tmp" && mv "$MANIFEST.tmp" "$MANIFEST"
+              echo "Kamera/Mikrofon izinleri AndroidManifest.xml'e eklendi."
+            else
+              echo "İzinler zaten mevcut, atlanıyor."
+            fi
+          else
+            echo "HATA: AndroidManifest.xml bulunamadı: $MANIFEST"
+            exit 1
+          fi
       - name: Debug APK derle
         script: |
           cd android
