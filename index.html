@@ -471,7 +471,7 @@
   .ob-welcome-title{ font-size:23px; font-weight:800; margin-top:20px; opacity:0; }
   .ob-welcome-sub{ font-size:14px; color:var(--text-dim); margin-top:10px; max-width:280px; line-height:1.55; opacity:0; }
   .ob-btn{ margin-top:28px; background:var(--grad); border:none; color:#fff; font-weight:700; font-size:15px; padding:13px 38px; border-radius:26px; cursor:pointer; box-shadow:0 4px 20px rgba(236,72,153,.35); opacity:0; }
-  #obStep3 .ob-form h2, #obStep3 .ob-form p.ob-formsub, #obStep3 .ob-form .field-label, #obStep3 .ob-form .field-input, #obStep3 .ob-form #obSubmitBtn{ opacity:0; }
+  #obStep3 .ob-form h2, #obStep3 .ob-form p.ob-formsub, #obStep3 .ob-form .field-label, #obStep3 .ob-form .field-input, #obStep3 .ob-form .ob-captcha-row, #obStep3 .ob-form .ob-policy-block, #obStep3 .ob-form #obSubmitBtn{ opacity:0; }
   /* Bu iç-öğe animasyonları sadece adım gerçekten görünür (.active) olduğunda
      tetiklenir — yoksa sayfa yüklenir yüklenmez, adım ekranda değilken oynayıp
      biterlerdi ve kullanıcı hiç geçişi göremezdi. */
@@ -481,7 +481,9 @@
   #obStep3.active .ob-form h2{ animation:obTitleIn .5s ease .1s both; }
   #obStep3.active .ob-form p.ob-formsub{ animation:obTitleIn .5s ease .2s both; }
   #obStep3.active .ob-form .field-label, #obStep3.active .ob-form .field-input{ animation:obTitleIn .5s ease .3s both; }
-  #obStep3.active .ob-form #obSubmitBtn{ animation:obTitleIn .5s ease .5s both; }
+  #obStep3.active .ob-form .ob-captcha-row{ animation:obTitleIn .5s ease .4s both; }
+  #obStep3.active .ob-form .ob-policy-block{ animation:obTitleIn .5s ease .45s both; }
+  #obStep3.active .ob-form #obSubmitBtn{ animation:obTitleIn .5s ease .55s both; }
   .ob-form{ width:100%; max-width:320px; text-align:left; margin:auto; }
   .ob-form h2{ font-size:20px; font-weight:800; margin-bottom:4px; text-align:center; }
   .ob-form p.ob-formsub{ font-size:13px; color:var(--text-faint); text-align:center; margin-bottom:18px; }
@@ -889,6 +891,26 @@
         <input class="field-input" id="obPassword" type="password" placeholder="En az 6 karakter">
         <div class="field-label">Şifre (Tekrar)</div>
         <input class="field-input" id="obPassword2" type="password" placeholder="Şifreni tekrar yaz">
+        <div class="field-label">Güvenlik Doğrulaması</div>
+        <div class="ob-captcha-row" style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <div id="obCaptchaQuestion" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:10px 16px;font-size:16px;font-weight:800;letter-spacing:.5px;flex-shrink:0;min-width:92px;text-align:center;user-select:none;"></div>
+          <input class="field-input" id="obCaptchaInput" placeholder="Sonucu yaz" inputmode="numeric" autocomplete="off" style="flex:1;margin:0;">
+          <div id="obCaptchaRefresh" title="Yenile" style="cursor:pointer;font-size:19px;padding:6px 8px;color:var(--text-dim);flex-shrink:0;">↻</div>
+        </div>
+        <div class="ob-policy-block" style="margin-top:14px;display:flex;flex-direction:column;gap:11px;text-align:left;">
+          <label class="ob-policy-row" style="display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:var(--text-dim);line-height:1.45;cursor:pointer;">
+            <input type="checkbox" id="obAcceptTerms" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;accent-color:var(--accent,#8b5cf6);">
+            <span><span id="obPolicyTermsLink" style="color:var(--accent,#8b5cf6);font-weight:700;text-decoration:underline;">Kullanım Şartları</span>'nı okudum, kabul ediyorum.</span>
+          </label>
+          <label class="ob-policy-row" style="display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:var(--text-dim);line-height:1.45;cursor:pointer;">
+            <input type="checkbox" id="obAcceptPrivacy" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;accent-color:var(--accent,#8b5cf6);">
+            <span><span id="obPolicyPrivacyLink" style="color:var(--accent,#8b5cf6);font-weight:700;text-decoration:underline;">Gizlilik Politikası</span>'nı okudum, kabul ediyorum.</span>
+          </label>
+          <label class="ob-policy-row" style="display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:var(--text-dim);line-height:1.45;cursor:pointer;">
+            <input type="checkbox" id="obAcceptCommunity" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;accent-color:var(--accent,#8b5cf6);">
+            <span><span id="obPolicyCommunityLink" style="color:var(--accent,#8b5cf6);font-weight:700;text-decoration:underline;">Topluluk Kuralları</span>'nı okudum, kabul ediyorum.</span>
+          </label>
+        </div>
         <div class="ob-error" id="obError"></div>
         <button class="ob-btn" id="obSubmitBtn" style="width:100%;margin-top:20px;">Glowo'ya Katıl</button>
         <div class="ob-switch-link" id="obGoLoginLink" style="text-align:center;margin-top:14px;font-size:13px;color:var(--text-faint);cursor:pointer;">Zaten hesabın var mı? <span style="color:var(--accent,#8b5cf6);font-weight:600;">Giriş Yap</span></div>
@@ -1240,6 +1262,47 @@
     </div>
   </div>
 
+  <div class="modal-overlay center" id="glowoChangedOverlay">
+    <div class="sheet" style="max-width:390px;">
+      <div style="text-align:center;font-size:42px;line-height:1;margin-bottom:6px;">✨</div>
+      <h3 style="text-align:center;">Glowo Tamamen Değişti!</h3>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.5;text-align:center;margin-bottom:4px;">
+        Karşınızda yepyeni bir Glowo — bu güncellemeyle birlikte neler geldi:
+      </div>
+      <div style="margin:12px 0 14px;display:flex;flex-direction:column;gap:11px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <span style="font-size:19px;flex-shrink:0;">🎁</span>
+          <span style="font-size:12.5px;color:var(--text-dim);line-height:1.45;">Yepyeni hediyeler eklendi — gönderdiğin her hediyenin jeton değeri artık doğrudan alıcının bakiyesine ekleniyor.</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <span style="font-size:19px;flex-shrink:0;">📸</span>
+          <span style="font-size:12.5px;color:var(--text-dim);line-height:1.45;">Artık aynı anda 3 hikaye paylaşabilirsin; hikayeler yalnızca takip ettiğin kişilere görünür.</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <span style="font-size:19px;flex-shrink:0;">🛡️</span>
+          <span style="font-size:12.5px;color:var(--text-dim);line-height:1.45;">Hesap güvenliği güçlendirildi: kayıt sırasında doğrulama ve topluluk kurallarına onay eklendi.</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <span style="font-size:19px;flex-shrink:0;">⚡</span>
+          <span style="font-size:12.5px;color:var(--text-dim);line-height:1.45;">Arayüzde genel bir kalite ve performans yenilemesi yapıldı.</span>
+        </div>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-btns-danger" id="glowoChangedOk" style="width:100%;padding:11px 0;border-radius:9px;font-weight:700;font-size:14px;border:none;cursor:pointer;background:var(--grad);color:#fff;">Harika, Keşfet!</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay center" id="policyOverlay" style="z-index:110;">
+    <div class="sheet" style="max-width:430px;max-height:82vh;display:flex;flex-direction:column;">
+      <h3 id="policyOverlayTitle">Kullanım Şartları</h3>
+      <div id="policyOverlayBody" style="font-size:12px;color:var(--text-dim);line-height:1.65;white-space:pre-line;text-align:left;overflow-y:auto;flex:1;padding-right:4px;margin:4px 0 10px;"></div>
+      <div class="modal-btns">
+        <button class="modal-btns-danger" id="policyOverlayClose" style="flex:1;padding:11px 0;border-radius:9px;font-weight:700;font-size:14px;border:none;cursor:pointer;background:var(--grad);color:#fff;">Kapat</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay center" id="reportOverlay">
     <div class="sheet">
       <h3>İçeriği Şikayet Et</h3>
@@ -1321,7 +1384,7 @@
    "guncelle" komutu, kullanıcının cihazındaki bu sabitle karşılaştırma
    yaparak zorunlu güncelleme ekranını gösterip göstermeyeceğine karar verir.
    Ayarlar > Glowo Hakkında ekranındaki sürüm yazısı da buradan geliyor. */
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "2.0.0";
 /* "1.2.3" gibi iki sürümü karşılaştırır: current >= required ise true döner. */
 function isVersionAtLeast(current, required){
   const c = String(current||"0").split(".").map(n=>parseInt(n,10)||0);
@@ -1746,21 +1809,30 @@ function persistAccount(){
 
 /* 30 gün girilmeyen hesapların silinebileceğine dair uyarı — cihaz başına
    bir kere gösterilir (açılış menüsünde). */
-if(!Storage.get("glowo_inactivity_notice_seen")){
-  document.getElementById("inactivityNoticeOverlay").classList.add("show");
-} else if(!Storage.get("glowo_speed_announce_seen")){
-  document.getElementById("speedAnnounceOverlay").classList.add("show");
+function showNextOneTimeNotice(){
+  if(!Storage.get("glowo_inactivity_notice_seen")){
+    document.getElementById("inactivityNoticeOverlay").classList.add("show");
+  } else if(!Storage.get("glowo_speed_announce_seen")){
+    document.getElementById("speedAnnounceOverlay").classList.add("show");
+  } else if(!Storage.get("glowo_megaupdate_v2_seen")){
+    document.getElementById("glowoChangedOverlay").classList.add("show");
+  }
 }
+showNextOneTimeNotice();
 document.getElementById("inactivityNoticeOk").addEventListener("click", ()=>{
   Storage.set("glowo_inactivity_notice_seen", "1");
   document.getElementById("inactivityNoticeOverlay").classList.remove("show");
-  if(!Storage.get("glowo_speed_announce_seen")){
-    document.getElementById("speedAnnounceOverlay").classList.add("show");
-  }
+  showNextOneTimeNotice();
 });
 document.getElementById("speedAnnounceOk").addEventListener("click", ()=>{
   Storage.set("glowo_speed_announce_seen", "1");
   document.getElementById("speedAnnounceOverlay").classList.remove("show");
+  showNextOneTimeNotice();
+});
+document.getElementById("glowoChangedOk").addEventListener("click", ()=>{
+  Storage.set("glowo_megaupdate_v2_seen", "1");
+  document.getElementById("glowoChangedOverlay").classList.remove("show");
+  showNextOneTimeNotice();
 });
 
 /* ===================== FIRESTORE DATA LAYER =====================
@@ -4789,6 +4861,7 @@ async function doDeleteAccount(){
 document.getElementById("obStartBtn").addEventListener("click", ()=>{
   document.getElementById("obStep2").classList.remove("active");
   document.getElementById("obStep3").classList.add("active");
+  generateCaptcha();
 });
 document.getElementById("obLoginStartBtn").addEventListener("click", ()=>{
   document.getElementById("obStep2").classList.remove("active");
@@ -4803,8 +4876,150 @@ document.getElementById("obGoRegisterLink").addEventListener("click", ()=>{
   document.getElementById("loginError").classList.remove("show");
   document.getElementById("obStep4").classList.remove("active");
   document.getElementById("obStep3").classList.add("active");
+  generateCaptcha();
 });
 document.getElementById("obSubmitBtn").addEventListener("click", submitOnboarding);
+
+/* Basit istemci-taraflı güvenlik bulmacası (matematik işlemi). Gerçek bir
+   backend/Cloud Functions olmadığı için sunucu tarafında doğrulanamıyor —
+   amacı otomatik bot kayıtlarını biraz zorlaştırmak, kriptografik bir
+   koruma değil. */
+let obCaptchaAnswer = null;
+function generateCaptcha(){
+  const a = 1 + Math.floor(Math.random()*20);
+  const b = 1 + Math.floor(Math.random()*20);
+  const ops = Math.random() < 0.5 ? ["+", (x,y)=>x+y] : ["-", (x,y)=>x-y];
+  const hi = Math.max(a,b), lo = Math.min(a,b);
+  const question = ops[0] === "+" ? `${lo} + ${hi}` : `${hi} - ${lo}`;
+  obCaptchaAnswer = ops[0] === "+" ? lo+hi : hi-lo;
+  const qEl = document.getElementById("obCaptchaQuestion");
+  if(qEl) qEl.textContent = `${question} = ?`;
+  const inputEl = document.getElementById("obCaptchaInput");
+  if(inputEl) inputEl.value = "";
+}
+generateCaptcha();
+document.getElementById("obCaptchaRefresh").addEventListener("click", generateCaptcha);
+
+/* Kayıt sırasında gösterilen Kullanım Şartları / Gizlilik Politikası /
+   Topluluk Kuralları metinleri. Bunlar Yusuf için taslak olarak yazılmıştır;
+   gerçek bir yayın öncesi bir avukata gösterilmesi tavsiye edilir. */
+const POLICY_TEXTS = {
+  terms: {
+    title: "Kullanım Şartları",
+    body: `Son güncelleme: ${new Date().toLocaleDateString("tr-TR")}
+
+1. Kabul
+Glowo'yu ("Uygulama") indirerek, hesap oluşturarak veya kullanarak bu Kullanım Şartları'nı kabul etmiş sayılırsın. Kabul etmiyorsan Uygulama'yı kullanmamalısın.
+
+2. Yaş Sınırı
+Glowo'yu kullanmak için en az 13 yaşında olman gerekir. 18 yaşından küçükysen, Uygulama'yı yalnızca veli/vasi onayı ve gözetimiyle kullanmalısın.
+
+3. Hesabın
+Kayıt sırasında verdiğin bilgilerin doğru olmasından sen sorumlusun. Şifreni başkasıyla paylaşmamalısın; hesabında gerçekleşen tüm işlemlerden sen sorumlusun. Şüpheli bir giriş fark edersen şifreni hemen değiştir.
+
+4. İçerik ve Davranış Kuralları
+Uygulama'ya yüklediğin video, fotoğraf, yorum ve mesajlardan sen sorumlusun. Yasa dışı, nefret söylemi içeren, taciz edici, şiddet içeren, cinsel içerikli (özellikle reşit olmayanları konu alan hiçbir içerik kesinlikle yasaktır ve tespit edildiğinde yetkili mercilere bildirilir), başkasının telif hakkını ihlal eden veya spam niteliğinde içerik paylaşamazsın. Ayrıntılar için Topluluk Kuralları'na bakabilirsin.
+
+5. Jetonlar ve Hediyeler
+Uygulama içindeki jeton ve hediye sistemi tamamen sanaldır, gerçek para ile satın alınmaz ve gerçek paraya ya da başka bir değere çevrilemez. Jetonlar yalnızca Uygulama içinde, Uygulama'nın sunduğu özellikler için kullanılabilir; nakit karşılığı yoktur ve iade edilmez.
+
+6. İçeriğin Kullanımı
+Paylaştığın içeriklerin sahipliği sende kalır. Ancak içeriği Uygulama üzerinde depolayabilmemiz, gösterebilmemiz ve diğer kullanıcılara sunabilmemiz için bize dünya çapında, münhasır olmayan, telifsiz bir kullanım lisansı vermiş olursun.
+
+7. Hesabın Askıya Alınması veya Silinmesi
+Bu Şartlar'ı ihlal ettiğini tespit edersek hesabını uyarabilir, geçici olarak kısıtlayabilir veya kalıcı olarak kapatabiliriz. 30 gün boyunca giriş yapılmayan hesaplar, yer açmak amacıyla silinebilir; bu konuda kayıt sırasında ve uygulama açılışında ayrıca bilgilendirilirsin.
+
+8. Sorumluluğun Sınırlandırılması
+Uygulama "olduğu gibi" sunulur. Kesintisiz veya hatasız çalışacağını garanti etmeyiz. Yasaların izin verdiği ölçüde, Uygulama kullanımından doğabilecek dolaylı zararlardan sorumlu tutulamayız.
+
+9. Değişiklikler
+Bu Şartlar'ı zaman zaman güncelleyebiliriz. Önemli değişikliklerde seni Uygulama içinden bilgilendirmeye çalışırız. Güncelleme sonrası Uygulama'yı kullanmaya devam etmen, yeni şartları kabul ettiğin anlamına gelir.
+
+10. İletişim
+Sorularını Uygulama içindeki destek/şikayet kanallarından bize iletebilirsin.
+
+Not: Bu metin bir taslaktır ve hukuki danışmanlık yerine geçmez.`
+  },
+  privacy: {
+    title: "Gizlilik Politikası",
+    body: `Son güncelleme: ${new Date().toLocaleDateString("tr-TR")}
+
+1. Topladığımız Bilgiler
+Hesap oluştururken ad-soyad, kullanıcı adı, doğum tarihi ve şifre bilgini alırız (şifren bizim tarafımızdan okunabilir şekilde değil, güvenli bir biçimde saklanır). Uygulama'yı kullanırken paylaştığın videolar, fotoğraflar, yorumlar, mesajlar, takip ettiğin/seni takip eden kişiler ve jeton/hediye işlemlerin gibi içerikleri de işleriz. Ayrıca cihaz ve kullanım bilgileri (örneğin uygulama sürümü, genel hata/performans kayıtları) otomatik olarak toplanabilir.
+
+2. Bilgilerini Nasıl Kullanırız
+Bu bilgileri hesabını oluşturup yönetmek, Uygulama'nın temel özelliklerini (akış, mesajlaşma, bildirimler, jeton/hediye sistemi) çalıştırmak, güvenliği sağlamak, kötüye kullanımı önlemek ve Uygulama'yı iyileştirmek için kullanırız. Bilgilerini üçüncü taraflara pazarlama amacıyla satmayız.
+
+3. Verilerin Saklandığı Yer
+Verilerin, altyapı sağlayıcımız olan Firebase (Google) sunucularında saklanır. Bu sağlayıcı, kendi güvenlik ve veri koruma standartlarına tabidir.
+
+4. Diğer Kullanıcılarla Paylaşım
+Profilin, kullanıcı adın, paylaştığın gönderiler ve (gizlilik ayarına göre) takipçi/takip sayıların diğer kullanıcılar tarafından görülebilir. Özel/gizli hesap ayarını açarsan içeriklerinin görünürlüğü kısıtlanır. Mesajların yalnızca ilgili sohbetin tarafları arasında paylaşılır.
+
+5. Çocukların Gizliliği
+Glowo, 13 yaşın altındaki kullanıcılar için tasarlanmamıştır ve bu yaş grubundan bilerek veri toplamayız. 13 yaşın altında olduğunu öğrendiğimiz bir hesabı kapatırız.
+
+6. Haklarınız
+Hesap bilgilerini Uygulama içinden görüntüleyebilir, güncelleyebilir ve hesabını silmeyi talep edebilirsin. Hesabını sildiğinde, ilişkili veriler makul bir süre içinde sistemlerimizden kaldırılır (yasal zorunluluklar hariç).
+
+7. Veri Güvenliği
+Verilerini korumak için makul teknik ve idari önlemler alırız. Ancak internet üzerinden hiçbir iletimin %100 güvenli olmadığını unutma.
+
+8. Değişiklikler
+Bu Politika'yı zaman zaman güncelleyebiliriz; önemli değişikliklerde Uygulama içinden bilgilendiririz.
+
+9. İletişim
+Gizlilikle ilgili sorularını Uygulama içindeki destek kanallarından iletebilirsin.
+
+Not: Bu metin bir taslaktır ve hukuki danışmanlık yerine geçmez; herkese açık bir yayın öncesinde bir avukata gösterilmesi önerilir.`
+  },
+  community: {
+    title: "Topluluk Kuralları",
+    body: `Glowo, herkesin kendini güvende hissettiği bir topluluk olmayı hedefler. Bu platformda aşağıdaki kurallara uymanı bekleriz:
+
+1. Saygılı Ol
+Irk, etnik köken, cinsiyet, cinsel yönelim, din, engellilik veya yaşa dayalı nefret söylemi, taciz ve zorbalık kesinlikle yasaktır.
+
+2. Çocukların Güvenliği — Sıfır Tolerans
+Reşit olmayanları hedef alan, istismar eden veya cinselleştiren hiçbir içeriğe, hiçbir şekilde izin verilmez. Böyle bir içerik tespit edildiğinde hesap derhal ve kalıcı olarak kapatılır, gerekli durumlarda yetkili mercilere bildirilir.
+
+3. Şiddet ve Tehlikeli İçerik
+Gerçek şiddeti öven, teşvik eden veya ayrıntılı biçimde gösteren içerikler, kendine zarar verme/intihar içeriklerini teşvik eden paylaşımlar yasaktır.
+
+4. Cinsel İçerik
+Açık cinsel içerik ve çıplaklık paylaşılamaz.
+
+5. Dolandırıcılık ve Sahte Hesaplar
+Başka birini taklit etmek, sahte kimlik oluşturmak, jeton/hediye sistemini kötüye kullanmak (ör. sahte hesaplarla jeton biriktirmeye çalışmak) veya diğer kullanıcıları dolandırmaya yönelik girişimler yasaktır.
+
+6. Spam
+Tekrar eden, alakasız veya yanıltıcı içerik/yorum/mesaj paylaşımı (spam) yasaktır.
+
+7. Telif Hakları
+Yalnızca sahibi olduğun veya paylaşma izni olan içerikleri yükle. Başkasının telifli içeriğini izinsiz paylaşma.
+
+8. Bildirme ve Uygulama
+Kurallara aykırı içerik gördüğünde ilgili gönderi, yorum veya hesabı "Şikayet Et" özelliğiyle bildirebilirsin. İhlal tespit edilen hesaplara durumun ciddiyetine göre uyarı verilir, içerik kaldırılır, hesap geçici olarak kısıtlanır veya kalıcı olarak kapatılır. Hesabının haksız yere kısıtlandığını düşünüyorsan destek kanallarından itiraz edebilirsin.
+
+Bu kurallar, herkesin Glowo'yu güvenle kullanabilmesi için vardır — birlikte daha iyi bir topluluk oluşturalım. ✨`
+  }
+};
+function openPolicyOverlay(key){
+  const p = POLICY_TEXTS[key];
+  if(!p) return;
+  document.getElementById("policyOverlayTitle").textContent = p.title;
+  document.getElementById("policyOverlayBody").textContent = p.body;
+  document.getElementById("policyOverlay").classList.add("show");
+}
+document.getElementById("obPolicyTermsLink").addEventListener("click", (e)=>{ e.preventDefault(); openPolicyOverlay("terms"); });
+document.getElementById("obPolicyPrivacyLink").addEventListener("click", (e)=>{ e.preventDefault(); openPolicyOverlay("privacy"); });
+document.getElementById("obPolicyCommunityLink").addEventListener("click", (e)=>{ e.preventDefault(); openPolicyOverlay("community"); });
+document.getElementById("policyOverlayClose").addEventListener("click", ()=>{
+  document.getElementById("policyOverlay").classList.remove("show");
+});
+document.getElementById("policyOverlay").addEventListener("click", (e)=>{
+  if(e.target.id === "policyOverlay") document.getElementById("policyOverlay").classList.remove("show");
+});
 
 /* Kayıt: mevcut anonim oturumu gerçek bir e-posta/şifre kimlik bilgisine
    "bağlıyoruz" (linkWithCredential) — uid değişmiyor, ama artık bu hesaba
@@ -4828,6 +5043,21 @@ async function submitOnboarding(){
   if(!username) username = name.toLowerCase().replace(/[^a-z0-9]+/g,"");
   if(!password || password.length < 6){ errEl.textContent = "Şifre en az 6 karakter olmalı."; errEl.classList.add("show"); return; }
   if(password !== password2){ errEl.textContent = "Şifreler birbiriyle uyuşmuyor."; errEl.classList.add("show"); return; }
+  const captchaVal = document.getElementById("obCaptchaInput").value.trim();
+  if(captchaVal === "" || Number(captchaVal) !== obCaptchaAnswer){
+    errEl.textContent = "Güvenlik doğrulamasını yanlış cevapladın, tekrar dene.";
+    errEl.classList.add("show");
+    generateCaptcha();
+    return;
+  }
+  const acceptTerms = document.getElementById("obAcceptTerms").checked;
+  const acceptPrivacy = document.getElementById("obAcceptPrivacy").checked;
+  const acceptCommunity = document.getElementById("obAcceptCommunity").checked;
+  if(!acceptTerms || !acceptPrivacy || !acceptCommunity){
+    errEl.textContent = "Devam etmek için Kullanım Şartları, Gizlilik Politikası ve Topluluk Kuralları'nı kabul etmelisin.";
+    errEl.classList.add("show");
+    return;
+  }
   if(!myUid || !auth.currentUser){ errEl.textContent = "Sunucuya bağlanılamadı, internet bağlantını kontrol et."; errEl.classList.add("show"); return; }
 
   const submitBtn = document.getElementById("obSubmitBtn");
@@ -4849,7 +5079,8 @@ async function submitOnboarding(){
       color: AV_COLORS[Math.floor(Math.random()*AV_COLORS.length)],
       following:0, followers:0, likes:0, birthdate:bdate, isFounder, avatarPhoto:null,
       private:false, createdAt: FieldValue.serverTimestamp(),
-      tokens:10, tokenMilestoneFollowers:0, verified:false, giftTokensReceived:0
+      tokens:10, tokenMilestoneFollowers:0, verified:false, giftTokensReceived:0,
+      policyAcceptedAt: FieldValue.serverTimestamp(), policyVersion: "1"
     };
     await db.collection("users").doc(myUid).set(profileData);
     hydrateProfileFromDoc(profileData);
