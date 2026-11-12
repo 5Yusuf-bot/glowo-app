@@ -496,11 +496,14 @@ workflows:
           fi
       - name: Gradle'a imzalama ve hedef API ayarlarını ekle
         script: |
-          # versionCode'u $BUILD_NUMBER'a değil, UTC zaman damgasına (epoch saniye) göre
-          # üretiyoruz. Böylece Codemagic'in build sayacı ne yaparsa yapsın (sıfırlansa,
-          # tekrarlansa vs.) versionCode HER ZAMAN öncekinden büyük olur ve Play Console
-          # "sürüm kodu daha önce kullanıldı" hatası bir daha asla çıkmaz.
-          VERSION_CODE=$(date -u +%s)
+          # versionCode'u $BUILD_NUMBER'a değil, sabit bir başlangıç tarihinden (2023-11-14)
+          # bu yana geçen saniyeye göre üretiyoruz. Ham epoch saniyesi (örn. 1.79 milyar)
+          # kullanmak Google'ın uyardığı gibi gereksiz büyük sayılara ve yıllar içinde
+          # versionCode tavanına (2.147.483.647) çarpmaya yol açar; bu offset ile sayı hem
+          # küçük/makul kalır hem de yaklaşık 60+ yıl boyunca tavana çarpmaz, ve Codemagic'in
+          # kendi build sayacı ne yaparsa yapsın HER ZAMAN öncekinden büyük olur — "sürüm kodu
+          # daha önce kullanıldı" hatası bir daha asla çıkmaz.
+          VERSION_CODE=$(( $(date -u +%s) - 1700000000 ))
           echo "Hesaplanan versionCode: $VERSION_CODE"
           cat >> android/app/build.gradle << EOF
 
