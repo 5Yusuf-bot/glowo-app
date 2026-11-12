@@ -1331,6 +1331,16 @@
     </div>
   </div>
 
+  <div class="modal-overlay center" id="postMoreOverlay">
+    <div class="sheet">
+      <h3>Diğer Seçenekler</h3>
+      <div class="report-reason-list" id="postMoreList"></div>
+      <div class="modal-btns">
+        <button class="btn-ghost" id="postMoreCancel">Vazgeç</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay center" id="reportOverlay">
     <div class="sheet">
       <h3>İçeriği Şikayet Et</h3>
@@ -1412,7 +1422,7 @@
    "guncelle" komutu, kullanıcının cihazındaki bu sabitle karşılaştırma
    yaparak zorunlu güncelleme ekranını gösterip göstermeyeceğine karar verir.
    Ayarlar > Glowo Hakkında ekranındaki sürüm yazısı da buradan geliyor. */
-const APP_VERSION = "2.1.0";
+const APP_VERSION = "2.1.1";
 /* "1.2.3" gibi iki sürümü karşılaştırır: current >= required ise true döner. */
 function isVersionAtLeast(current, required){
   const c = String(current||"0").split(".").map(n=>parseInt(n,10)||0);
@@ -1700,6 +1710,7 @@ verified:`<svg viewBox="0 0 24 24" fill="none"><path fill="#3897f0" d="M12 2.2l2
 gift:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="1.5"/><path d="M3 13h18M12 9v12"/><path d="M12 9c-1.8 0-5-1-5-3.2A2.3 2.3 0 0 1 9.3 3.5C11 3.5 12 6 12 9Z"/><path d="M12 9c1.8 0 5-1 5-3.2A2.3 2.3 0 0 0 14.7 3.5C13 3.5 12 6 12 9Z"/></svg>`,
 trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"/><path d="M6 7l1 13.5A1.5 1.5 0 0 0 8.5 22h7a1.5 1.5 0 0 0 1.5-1.5L18 7"/><path d="M10 11v6M14 11v6"/></svg>`,
 download:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19.5h16"/></svg>`,
+more:`<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>`,
 trophy:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a3 3 0 0 0 3 5.2M17 5h3a3 3 0 0 1-3 5.2"/><path d="M12 14v3M9 21h6M9.5 21c0-2 .8-3 2.5-4 1.7 1 2.5 2 2.5 4"/></svg>`,
 storyPlus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>`
 };
@@ -2304,8 +2315,7 @@ function postNode(p){
         <button class="act-btn" data-act="comment">${ICONS.comment}<span>${p.comments.length}</span></button>
         <button class="act-btn ${p.saved?'saved':''}" data-act="save">${p.saved?ICONS.bookmarkFilled:ICONS.bookmark}<span>Kaydet</span></button>
         <button class="act-btn" data-act="share">${ICONS.share}<span>${fmt(p.shares)}</span></button>
-        ${p.videoURL ? `<button class="act-btn" data-act="download" title="Videoyu İndir">${ICONS.download}<span>İndir</span></button>` : ""}
-        ${isFounderAccount() ? `<button class="act-btn admin-del" data-act="admindelete" title="Videoyu Sil (Kurucu)">${ICONS.trash}<span>Sil</span></button>` : ""}
+        <button class="act-btn" data-act="more" title="Diğer">${ICONS.more}</button>
         <div class="disc"></div>
       </div>
     </div>
@@ -2332,8 +2342,18 @@ function postNode(p){
     vid.addEventListener("loadeddata", hideSpinner);
     vid.addEventListener("canplay", hideSpinner);
     vid.addEventListener("playing", hideSpinner);
+    let videoSrcAttempt = 0;
     vid.addEventListener("error", ()=>{
       hideSpinner();
+      // 1. deneme: Cloudinary'nin otomatik-H.264/AAC dönüştürmesiyle açılmadıysa,
+      // 2. deneme olarak ham (dönüştürülmemiş) orijinal bağlantıyı dene — hangi
+      // bağlantı/format olursa olsun video gene de açılmayı denesin diye.
+      if(videoSrcAttempt === 0 && p.videoURL){
+        videoSrcAttempt = 1;
+        vid.src = p.videoURL;
+        vid.load();
+        return;
+      }
       if(el.querySelector(".vid-error")) return;
       const err = document.createElement("div");
       err.className = "vid-error";
@@ -2387,7 +2407,7 @@ function postNode(p){
     el.insertBefore(blurBg, vid);
     el.appendChild(spinner);
     el.appendChild(pauseIcon);
-    vid.src = p.videoURL;
+    vid.src = toPlayableVideoUrl(p.videoURL);
     vid.load();
 
     const muteBtn = document.createElement("button");
@@ -2403,20 +2423,6 @@ function postNode(p){
     const commentBtn = el.querySelector('[data-act="comment"]');
     if(commentBtn) commentBtn.insertAdjacentElement("afterend", muteBtn);
     else el.querySelector(".actions").appendChild(muteBtn);
-
-    if(!isOwnPost){
-      const reportBtn = document.createElement("button");
-      reportBtn.className = "act-btn";
-      reportBtn.type = "button";
-      reportBtn.innerHTML = ICONS.flag + `<span>Şikayet</span>`;
-      reportBtn.addEventListener("click", (ev)=>{
-        ev.stopPropagation();
-        openReportSheet(p.id);
-      });
-      const disc = el.querySelector(".disc");
-      if(disc) disc.insertAdjacentElement("beforebegin", reportBtn);
-      else el.querySelector(".actions").appendChild(reportBtn);
-    }
   }
   if(p.textOverlays && p.textOverlays.length){
     const layer = document.createElement("div");
@@ -2637,6 +2643,20 @@ function showHeartPop(el){
    niteliği farklı bir alan adından (Cloudinary) gelen videolarda da çalışıyor.
    Cloudinary URL'i değilse (beklenmedik bir biçimdeyse) olduğu gibi kullanılır,
    tarayıcı en azından videoyu yeni sekmede açar. */
+/* Videolar iPhone'dan HEVC/MOV gibi tarayıcıda açılmayan formatlarda
+   yüklenmiş olabilir. Cloudinary'nin "f_mp4,vc_h264,ac_aac" dönüştürme
+   bayrakları, kaynak format ne olursa olsun videoyu talep anında (ve bir
+   daha için önbelleğe alarak) evrensel H.264/AAC MP4'e çeviriyor — yani
+   hangi bağlantı/kaynak format olursa olsun video gene de oynatılabilir
+   hale geliyor. Cloudinary URL'i değilse dokunmadan olduğu gibi döner. */
+function toPlayableVideoUrl(videoURL){
+  if(!videoURL) return videoURL;
+  if(videoURL.includes("/upload/f_mp4,vc_h264")) return videoURL;
+  if(videoURL.includes("res.cloudinary.com") && videoURL.includes("/upload/")){
+    return videoURL.replace("/upload/", "/upload/f_mp4,vc_h264,ac_aac,q_auto/");
+  }
+  return videoURL;
+}
 function toCloudinaryDownloadUrl(videoURL){
   if(!videoURL) return videoURL;
   if(videoURL.includes("/fl_attachment/")) return videoURL;
@@ -2703,15 +2723,8 @@ function onPostActionClick(e){
     // ile gelip akışı yeniden çizecek, burada elle DOM değiştirmiyoruz
   } else if(act==="comment"){
     openComments(p.id);
-  } else if(act==="download"){
-    downloadVideo(p);
-  } else if(act==="admindelete"){
-    if(!isFounderAccount()) return;
-    confirmAction("Videoyu Sil", `@${p.user} kullanıcısının bu videosunu kalıcı olarak silmek istediğine emin misin?`, ()=>{
-      db.collection("posts").doc(String(p.id)).delete()
-        .then(()=> toast("Video silindi"))
-        .catch(err=>{ console.error("video silinemedi", err); toast("Silinemedi, tekrar dene"); });
-    });
+  } else if(act==="more"){
+    openPostMoreSheet(p);
   }
 }
 feedEl.addEventListener("click", onPostActionClick);
@@ -2872,6 +2885,54 @@ function submitComment(){
    almak yönetici tarafında (bakim.js "banla" komutu) elle yapılır — otomatik
    ban yok, yanlış/kötü niyetli şikayetlerin birini anında banlamasını
    istemiyoruz. */
+/* Video indirme, şikayet ve (kurucuysa) silme seçeneklerini tek bir "..."
+   menüsünde topluyor — aksiyon çubuğu (beğeni/yorum/kaydet/paylaş) uzayıp
+   karışmasın diye. Hangi seçeneklerin görüneceği gönderiye göre değişir:
+   video yoksa indirme yok, kendi gönderinse şikayet yok, kurucu değilsen
+   silme yok. */
+let activePostMoreId = null;
+function openPostMoreSheet(p){
+  activePostMoreId = p.id;
+  const isOwnPost = p.uid === myUid;
+  const items = [];
+  if(p.videoURL) items.push({action:"download", label:"İndir", icon:ICONS.download});
+  if(!isOwnPost) items.push({action:"report", label:"Şikayet Et", icon:ICONS.flag});
+  if(isFounderAccount()) items.push({action:"admindelete", label:"Videoyu Sil (Kurucu)", icon:ICONS.trash});
+  const list = document.getElementById("postMoreList");
+  list.innerHTML = items.length
+    ? items.map(it=>`<button class="report-reason-btn" data-more-action="${it.action}" style="display:flex;align-items:center;gap:10px;">${it.icon.replace('viewBox="0 0 24 24"','viewBox="0 0 24 24" width="17" height="17"')}<span>${it.label}</span></button>`).join("")
+    : `<div style="padding:10px 4px;color:var(--text-faint);font-size:13px;">Bu gönderi için ekstra bir seçenek yok.</div>`;
+  document.getElementById("postMoreOverlay").classList.add("show");
+}
+function closePostMoreSheet(){
+  document.getElementById("postMoreOverlay").classList.remove("show");
+  activePostMoreId = null;
+}
+document.getElementById("postMoreCancel").addEventListener("click", closePostMoreSheet);
+document.getElementById("postMoreOverlay").addEventListener("click", (e)=>{
+  if(e.target.id === "postMoreOverlay") closePostMoreSheet();
+});
+document.getElementById("postMoreList").addEventListener("click", (e)=>{
+  const btn = e.target.closest("[data-more-action]");
+  if(!btn) return;
+  const action = btn.dataset.moreAction;
+  const p = findPost(activePostMoreId);
+  closePostMoreSheet();
+  if(!p) return;
+  if(action==="download"){
+    downloadVideo(p);
+  } else if(action==="report"){
+    openReportSheet(p.id);
+  } else if(action==="admindelete"){
+    if(!isFounderAccount()) return;
+    confirmAction("Videoyu Sil", `@${p.user} kullanıcısının bu videosunu kalıcı olarak silmek istediğine emin misin?`, ()=>{
+      db.collection("posts").doc(String(p.id)).delete()
+        .then(()=> toast("Video silindi"))
+        .catch(err=>{ console.error("video silinemedi", err); toast("Silinemedi, tekrar dene"); });
+    });
+  }
+});
+
 let activeReportPostId = null;
 function openReportSheet(postId){
   activeReportPostId = postId;
