@@ -187,6 +187,8 @@
   .follow-chip.following{ opacity:.55; }
   .post-info .caption{ font-size:14.5px; margin-top:6px; line-height:1.35; color:#fff;}
   .post-info .hashtags{ color:#cfe8ff; font-weight:600; }
+  .friend-like-tag{ font-size:12.5px; font-weight:600; color:#e8d8ff; margin-top:5px; display:flex; align-items:center; gap:5px; }
+  .friend-like-tag::before{ content:"❤️"; font-size:11px; }
   .music-row{ display:flex; align-items:center; gap:6px; margin-top:8px; color:#fff; font-size:13px; overflow:hidden; white-space:nowrap; max-width:230px;}
   .music-row .marquee{ display:inline-block; animation:mq 8s linear infinite; }
   @keyframes mq{ 0%{transform:translateX(0);} 100%{transform:translateX(-50%);} }
@@ -298,6 +300,7 @@
   .bubble{ max-width:75%; padding:9px 13px; border-radius:16px; font-size:14px; line-height:1.35;}
   .bubble.them{ background:var(--panel-2); align-self:flex-start; border-bottom-left-radius:4px;}
   .bubble.me{ background:var(--grad); color:#fff; align-self:flex-end; border-bottom-right-radius:4px;}
+  .group-msg-sender{ font-size:11px; font-weight:700; color:var(--accent,#8b5cf6); margin-bottom:2px; }
   .chat-input-row{ display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--border);}
   .chat-input-row input{ flex:1; background:var(--panel-2); border:1px solid var(--border); border-radius:20px; padding:10px 14px; color:var(--text); font-size:14px; outline:none;}
   .chat-input-row button{ background:var(--grad); border:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;}
@@ -392,6 +395,8 @@
   .pstats b{ display:block; font-size:16px; font-weight:800;}
   .pstats span{ font-size:12px; color:var(--text-faint); }
   .pbio{ font-size:13.5px; color:var(--text-dim); margin-top:12px; max-width:280px; }
+  .intro-play-chip{ display:inline-flex; align-items:center; gap:6px; margin-top:10px; padding:7px 14px; border-radius:999px; background:var(--grad); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer; }
+  .intro-play-chip.playing{ opacity:.75; }
   .pbtn-row{ display:flex; gap:8px; margin-top:14px; width:100%; max-width:300px;}
   .pbtn{ flex:1; padding:9px 0; border-radius:8px; font-weight:700; font-size:13.5px; border:1px solid var(--border); background:var(--panel-2); color:var(--text); cursor:pointer;}
   .ptabs{ display:flex; border-bottom:1px solid var(--border); margin-top:18px; }
@@ -938,6 +943,7 @@
     <div class="feed-toggle">
       <button data-filter="following">Takip Ettiklerin</button>
       <button data-filter="foryou" class="active">Öneriler</button>
+      <button data-filter="friends">Arkadaşların Beğendi</button>
     </div>
     <button id="searchBtn" title="Ara"></button>
   </div>
@@ -957,7 +963,7 @@
 
     <!-- INBOX -->
     <div class="tab-panel" id="tab-inbox">
-      <div class="panel-header" id="inboxPanelTitle">Gelen Kutusu</div>
+      <div class="panel-header"><span id="inboxPanelTitle">Gelen Kutusu</span><button id="newGroupBtn" title="Yeni Grup Sohbeti" style="background:var(--grad);border:none;color:#fff;border-radius:999px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Grup</button></div>
       <div class="panel-scroll" id="inboxScroll"></div>
       <div id="chatView">
         <div class="chat-header">
@@ -1210,6 +1216,13 @@
       <input class="field-input" id="editBirthdate" type="date">
       <div class="field-label">Biyografi</div>
       <textarea class="field-input" id="editBio"></textarea>
+      <div class="field-label">Profil Müziği / Introsu (en fazla 15 sn sesli tanıtım)</div>
+      <div class="edit-avatar-row" style="align-items:center;">
+        <button class="btn-ghost" type="button" id="introRecordBtn">🎙️ Kaydet</button>
+        <button class="btn-ghost" type="button" id="introPlayBtn" style="display:none;">▶️ Dinle</button>
+        <button class="btn-ghost" type="button" id="introRemoveBtn" style="display:none;">Introyu Kaldır</button>
+        <span id="introStatus" style="font-size:12px;color:var(--text-dim);margin-left:2px;"></span>
+      </div>
       <div class="field-label">Avatar Rengi</div>
       <div class="color-row" id="colorRow"></div>
       <div class="modal-btns">
@@ -1303,6 +1316,21 @@
     </div>
   </div>
 
+  <div class="modal-overlay center" id="newGroupOverlay" style="z-index:110;">
+    <div class="sheet" style="max-width:430px;max-height:82vh;display:flex;flex-direction:column;">
+      <h3>Yeni Grup Sohbeti</h3>
+      <div class="field-label">Grup Adı (opsiyonel)</div>
+      <input class="field-input" id="newGroupNameInput" placeholder="Örn: Yakın Arkadaşlar" maxlength="40">
+      <div class="field-label">Katılımcılar (en az 2 kişi seç)</div>
+      <div id="newGroupMemberList" style="overflow-y:auto;flex:1;min-height:80px;margin:0 -4px;"></div>
+      <div class="ob-error" id="newGroupError"></div>
+      <div class="modal-btns">
+        <button class="btn-ghost" id="newGroupCancel">Vazgeç</button>
+        <button class="btn-primary" id="newGroupCreateBtn">Oluştur</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay center" id="reportOverlay">
     <div class="sheet">
       <h3>İçeriği Şikayet Et</h3>
@@ -1384,7 +1412,7 @@
    "guncelle" komutu, kullanıcının cihazındaki bu sabitle karşılaştırma
    yaparak zorunlu güncelleme ekranını gösterip göstermeyeceğine karar verir.
    Ayarlar > Glowo Hakkında ekranındaki sürüm yazısı da buradan geliyor. */
-const APP_VERSION = "2.0.0";
+const APP_VERSION = "2.1.0";
 /* "1.2.3" gibi iki sürümü karşılaştırır: current >= required ise true döner. */
 function isVersionAtLeast(current, required){
   const c = String(current||"0").split(".").map(n=>parseInt(n,10)||0);
@@ -1617,7 +1645,15 @@ let unsubFeed = null, unsubOwnUser = null, unsubFollowing = null,
 let usersDirectory = [];      // array of user records (excluding self), newest first
 let usersByUid = {};          // same directory, keyed by uid for quick lookup
 let followingSet = new Set(); // uids the current user follows (accepted)
-let myChatThreads = [];       // array of {chatId, otherUid, lastMessage, lastFrom, lastAt}
+let myChatThreads = [];       // array of {chatId, otherUid, isGroup, participants, groupName, lastMessage, lastFrom, lastAt}
+/* Grup sohbetleri: chatId'yi her zaman activeChatId üzerinden takip ediyoruz
+   (1'e1 sohbetlerde chatIdFor(otherUid), gruplarda rastgele Firestore ID'si) —
+   pushChatMessage/sendChatMsg artık tek bir activeChatId'ye yazıyor, 1'e1 mi
+   grup mu olduğuna activeChatIsGroup'a bakarak karar veriyor. */
+let activeChatId = null;
+let activeChatIsGroup = false;
+let activeChatParticipants = [];
+let activeChatGroupName = "";
 let pendingSentRequests = new Set();  // uids I've sent a follow request to (private accounts)
 let incomingRequests = [];    // pending follow requests sent TO me: {id, from, fromName, fromUser, fromColor, fromAvatarPhoto}
 let blockedByMe = new Set();  // uids I've blocked
@@ -1663,6 +1699,7 @@ flag:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2
 verified:`<svg viewBox="0 0 24 24" fill="none"><path fill="#3897f0" d="M12 2.2l2.1 1.6 2.6-.4 1.1 2.4 2.4 1.1-.4 2.6 1.6 2.1-1.6 2.1.4 2.6-2.4 1.1-1.1 2.4-2.6-.4L12 21.8l-2.1-1.6-2.6.4-1.1-2.4-2.4-1.1.4-2.6L2.6 12l1.6-2.1-.4-2.6 2.4-1.1L7.3 3.8l2.6.4L12 2.2z"/><path stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8.3 12.2l2.4 2.4 5-5.2"/></svg>`,
 gift:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="1.5"/><path d="M3 13h18M12 9v12"/><path d="M12 9c-1.8 0-5-1-5-3.2A2.3 2.3 0 0 1 9.3 3.5C11 3.5 12 6 12 9Z"/><path d="M12 9c1.8 0 5-1 5-3.2A2.3 2.3 0 0 0 14.7 3.5C13 3.5 12 6 12 9Z"/></svg>`,
 trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"/><path d="M6 7l1 13.5A1.5 1.5 0 0 0 8.5 22h7a1.5 1.5 0 0 0 1.5-1.5L18 7"/><path d="M10 11v6M14 11v6"/></svg>`,
+download:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19.5h16"/></svg>`,
 trophy:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a3 3 0 0 0 3 5.2M17 5h3a3 3 0 0 1-3 5.2"/><path d="M12 14v3M9 21h6M9.5 21c0-2 .8-3 2.5-4 1.7 1 2.5 2 2.5 4"/></svg>`,
 storyPlus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>`
 };
@@ -1798,7 +1835,7 @@ const state = {
   feedFilter: "foryou",
   posts: [],
   notifications: [],
-  profile: { name:"", user:"", username:"", bio:"", color:"#8b5cf6", following:0, followers:0, likes:0, ptab:"videos", isFounder:false, birthdate:"", avatarPhoto:null, tokens:10, tokenMilestoneFollowers:0, verified:false, giftTokensReceived:0 },
+  profile: { name:"", user:"", username:"", bio:"", color:"#8b5cf6", following:0, followers:0, likes:0, ptab:"videos", isFounder:false, birthdate:"", avatarPhoto:null, profileIntroURL:null, tokens:10, tokenMilestoneFollowers:0, verified:false, giftTokensReceived:0 },
   settings: { theme:"dark", notifLikes:true, notifComments:true, notifFollows:true, notifMessages:true, privateAccount:false, allowComments:true, dmPermission:"everyone", language:"tr", dataSaver:false, autoplay:true }
 };
 
@@ -1852,6 +1889,7 @@ function hydrateProfileFromDoc(data){
     following: data.following||0, followers: data.followers||0, likes: data.likes||0,
     ptab: prevPtab, isFounder: !!data.isFounder, birthdate: data.birthdate || "",
     avatarPhoto: data.avatarPhoto || null,
+    profileIntroURL: data.profileIntroURL || null,
     tokens: data.tokens!==undefined ? data.tokens : 10,
     tokenMilestoneFollowers: data.tokenMilestoneFollowers||0,
     verified: !!data.verified,
@@ -2080,8 +2118,13 @@ function subscribeChats(){
     .onSnapshot(snap=>{
       myChatThreads = snap.docs.map(d=>{
         const c = d.data();
-        const otherUid = (c.participants||[]).find(u=>u!==myUid);
-        return { chatId:d.id, otherUid, lastMessage:c.lastMessage||"", lastFrom:c.lastFrom||"", lastAt:c.lastAt||null };
+        const participants = c.participants || [];
+        const isGroup = !!c.isGroup || participants.length > 2;
+        const otherUid = isGroup ? null : participants.find(u=>u!==myUid);
+        return {
+          chatId:d.id, otherUid, isGroup, participants, groupName: c.groupName || "",
+          lastMessage:c.lastMessage||"", lastFrom:c.lastFrom||"", lastAt:c.lastAt||null
+        };
       }).sort((a,b)=>{
         const at = a.lastAt ? a.lastAt.toMillis() : 0;
         const bt = b.lastAt ? b.lastAt.toMillis() : 0;
@@ -2217,6 +2260,24 @@ document.getElementById("settingsBack").innerHTML = ICONS.back;
 const feedEl = document.getElementById("feed");
 
 let feedMuted = true; /* Videolar otomatik oynatma politikaları yüzünden sessiz başlar; kullanıcı sağ üstteki ikona basınca sesi açılır ve bu tercih sonraki videolar için de korunur. */
+/* "Arkadaşların Beğendi" sekmesi için: takip ettiklerimden hangilerinin bu
+   videoyu beğendiğini küçük bir etiket olarak gösterir (ör. "@ahmet beğendi").
+   usersByUid sadece en son 200 hesabı kapsadığından (bkz. subscribeUsersDirectory),
+   listede olmayan biri için genel "bir arkadaşın" ifadesi kullanılır — veri
+   eksik diye hata vermez, sadece ismi gösteremez. */
+function friendLikersLabel(p){
+  const likers = (p.likedBy||[]).filter(uid => uid !== myUid && followingSet.has(uid));
+  if(!likers.length) return "";
+  const nameOf = uid => (usersByUid[uid] && usersByUid[uid].user) ? usersByUid[uid].user : "bir arkadaşın";
+  if(likers.length === 1) return `${nameOf(likers[0])} beğendi`;
+  if(likers.length === 2) return `${nameOf(likers[0])} ve ${nameOf(likers[1])} beğendi`;
+  return `${nameOf(likers[0])} ve ${likers.length - 1} arkadaşın daha beğendi`;
+}
+function friendLikeTagHtml(p){
+  if(state.feedFilter !== "friends") return "";
+  const label = friendLikersLabel(p);
+  return label ? `<div class="friend-like-tag">${label}</div>` : "";
+}
 function postNode(p){
   const el = document.createElement("div");
   el.className = "post";
@@ -2231,6 +2292,7 @@ function postNode(p){
       <div class="post-info">
         <div class="uname">@${p.user}${p.founderPost?`<span class="founder-mini" title="Kurucu">${ICONS.crown}</span>`:""}${verifiedTickHtml(p.uid, isOwnPost)}${isOwnPost?"":`<span class="follow-chip ${p.following?'following':''}" data-act="follow">${p.following?'Takip Ediliyor':(pendingSentRequests.has(p.uid)?'İstek Gönderildi':'Takip Et')}</span>`}</div>
         <div class="caption">${p.caption} <span class="hashtags">${p.tags}</span></div>
+        ${friendLikeTagHtml(p)}
         <div class="music-row">${ICONS.play.replace('viewBox="0 0 24 24"','viewBox="0 0 24 24" width="14" height="14"')}<span class="marquee">${p.music} &nbsp;&nbsp;•&nbsp;&nbsp; ${p.music}</span></div>
       </div>
       <div class="actions">
@@ -2242,6 +2304,7 @@ function postNode(p){
         <button class="act-btn" data-act="comment">${ICONS.comment}<span>${p.comments.length}</span></button>
         <button class="act-btn ${p.saved?'saved':''}" data-act="save">${p.saved?ICONS.bookmarkFilled:ICONS.bookmark}<span>Kaydet</span></button>
         <button class="act-btn" data-act="share">${ICONS.share}<span>${fmt(p.shares)}</span></button>
+        ${p.videoURL ? `<button class="act-btn" data-act="download" title="Videoyu İndir">${ICONS.download}<span>İndir</span></button>` : ""}
         ${isFounderAccount() ? `<button class="act-btn admin-del" data-act="admindelete" title="Videoyu Sil (Kurucu)">${ICONS.trash}<span>Sil</span></button>` : ""}
         <div class="disc"></div>
       </div>
@@ -2379,6 +2442,19 @@ function patchPostNode(el, p){
   }
   const captionEl = el.querySelector(".caption");
   if(captionEl) captionEl.innerHTML = `${p.caption} <span class="hashtags">${p.tags}</span>`;
+  const existingLikeTag = el.querySelector(".friend-like-tag");
+  const likeTagLabel = state.feedFilter === "friends" ? friendLikersLabel(p) : "";
+  if(likeTagLabel){
+    if(existingLikeTag) existingLikeTag.textContent = likeTagLabel;
+    else if(captionEl){
+      const tag = document.createElement("div");
+      tag.className = "friend-like-tag";
+      tag.textContent = likeTagLabel;
+      captionEl.insertAdjacentElement("afterend", tag);
+    }
+  } else if(existingLikeTag){
+    existingLikeTag.remove();
+  }
   const wrap = el.querySelector(".avatar-wrap");
   if(wrap){
     const shouldShowPlus = !(isOwnPost||p.following||pendingSentRequests.has(p.uid));
@@ -2411,12 +2487,17 @@ function patchPostNode(el, p){
 function renderFeed(){
   const list = state.posts
     .filter(p => !isBlockedEitherWay(p.uid))
-    .filter(p => state.feedFilter === "foryou" || p.following);
+    .filter(p => {
+      if(state.feedFilter === "foryou") return true;
+      if(state.feedFilter === "friends") return p.uid !== myUid && (p.likedBy||[]).some(uid => followingSet.has(uid));
+      return p.following;
+    });
   if(list.length===0){
     feedEl.innerHTML = "";
-    const msg = state.posts.length===0
-      ? "Henüz hiç video yok. İlk videoyu sen paylaş! 🎬"
-      : "Takip ettiğin kimse henüz video paylaşmadı. \"Öneriler\" sekmesine göz at!";
+    let msg;
+    if(state.posts.length===0) msg = "Henüz hiç video yok. İlk videoyu sen paylaş! 🎬";
+    else if(state.feedFilter === "friends") msg = "Takip ettiklerinin henüz beğendiği bir video yok. Daha sonra tekrar bak!";
+    else msg = "Takip ettiğin kimse henüz video paylaşmadı. \"Öneriler\" sekmesine göz at!";
     feedEl.innerHTML = `<div class="empty-hint">${msg}</div>`;
     return;
   }
@@ -2550,6 +2631,39 @@ function showHeartPop(el){
   pop.addEventListener("animationend", ()=> pop.remove());
   setTimeout(()=>{ if(pop.parentNode) pop.remove(); }, 1000);
 }
+/* Video indirme: Cloudinary'nin "fl_attachment" dönüştürme bayrağı, sunucu
+   tarafında Content-Disposition: attachment başlığı ekleterek tarayıcıya
+   dosyayı AÇMAK yerine İNDİRMESİ gerektiğini söylüyor — bu sayede <a download>
+   niteliği farklı bir alan adından (Cloudinary) gelen videolarda da çalışıyor.
+   Cloudinary URL'i değilse (beklenmedik bir biçimdeyse) olduğu gibi kullanılır,
+   tarayıcı en azından videoyu yeni sekmede açar. */
+function toCloudinaryDownloadUrl(videoURL){
+  if(!videoURL) return videoURL;
+  if(videoURL.includes("/fl_attachment/")) return videoURL;
+  if(videoURL.includes("res.cloudinary.com") && videoURL.includes("/upload/")){
+    return videoURL.replace("/upload/", "/upload/fl_attachment/");
+  }
+  return videoURL;
+}
+function downloadVideo(p){
+  if(!p || !p.videoURL){ toast("İndirilecek video bulunamadı"); return; }
+  try{
+    const url = toCloudinaryDownloadUrl(p.videoURL);
+    const safeUser = (p.user || "glowo").replace(/[^a-zA-Z0-9_-]/g, "");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `glowo_${safeUser || "video"}_${p.id}.mp4`;
+    a.target = "_blank";
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toast("İndiriliyor...");
+  }catch(e){
+    console.error("video indirme hatası", e);
+    toast("İndirilemedi, tekrar dene");
+  }
+}
 function onPostActionClick(e){
   const btn = e.target.closest("[data-act]");
   if(!btn) return;
@@ -2589,6 +2703,8 @@ function onPostActionClick(e){
     // ile gelip akışı yeniden çizecek, burada elle DOM değiştirmiyoruz
   } else if(act==="comment"){
     openComments(p.id);
+  } else if(act==="download"){
+    downloadVideo(p);
   } else if(act==="admindelete"){
     if(!isFounderAccount()) return;
     confirmAction("Videoyu Sil", `@${p.user} kullanıcısının bu videosunu kalıcı olarak silmek istediğine emin misin?`, ()=>{
@@ -3325,10 +3441,18 @@ function renderInbox(){
     return;
   }
   const withNames = myChatThreads
-    .filter(t=> !isBlockedEitherWay(t.otherUid))
+    .filter(t=> t.isGroup || !isBlockedEitherWay(t.otherUid))
     .map(t=>{
+      if(t.isGroup){
+        const memberNames = (t.participants||[]).filter(u=>u!==myUid).map(uid=>{
+          const u = usersDirectory.find(x=>x.uid===uid) || usersByUid[uid];
+          return u ? u.name : "Kullanıcı";
+        });
+        const displayName = t.groupName || memberNames.slice(0,3).join(", ") || "Grup";
+        return { ...t, displayName };
+      }
       const friend = usersDirectory.find(u=>u.uid===t.otherUid) || { uid:t.otherUid, name:"Kullanıcı", user:"", color:"#8b5cf6" };
-      return { ...t, friend };
+      return { ...t, friend, displayName: friend.name };
     });
   el.innerHTML =
     (state.notifications.length ? `<div class="section-label">Bildirimler</div>` +
@@ -3339,14 +3463,18 @@ function renderInbox(){
         </div>`).join("") : "") +
     (withNames.length ? `<div class="section-label">Mesajlar</div>` +
       withNames.map(t=>`
-        <div class="msg-row" data-uid="${t.otherUid}">
-          ${avatarCircle(48, t.friend.color, initials(t.friend.name), t.friend.avatarPhoto)}
-          <div class="friend-meta"><div class="fname">${t.friend.name}</div><div class="msg-preview">${t.lastFrom===myUid?"Sen: ":""}${escapeHtml(t.lastMessage||"")}</div></div>
+        <div class="msg-row" data-chat-id="${t.chatId}">
+          ${t.isGroup
+            ? `<div class="favatar" style="width:48px;height:48px;font-size:17px;background:var(--grad);">👥</div>`
+            : avatarCircle(48, t.friend.color, initials(t.friend.name), t.friend.avatarPhoto)}
+          <div class="friend-meta"><div class="fname">${escapeHtml(t.displayName)}${t.isGroup?` <span style="color:var(--text-faint);font-weight:500;font-size:11.5px;">(${(t.participants||[]).length})</span>`:""}</div><div class="msg-preview">${t.lastFrom===myUid?"Sen: ":""}${escapeHtml(t.lastMessage||"")}</div></div>
         </div>`).join("") : "");
   el.querySelectorAll(".msg-row").forEach(r=>{
     r.addEventListener("click", ()=>{
-      const t = withNames.find(x=>x.otherUid===r.dataset.uid);
-      if(t) openChatWith(t.friend);
+      const t = withNames.find(x=>x.chatId===r.dataset.chatId);
+      if(!t) return;
+      if(t.isGroup) openGroupChat(t);
+      else openChatWith(t.friend);
     });
   });
 }
@@ -3364,7 +3492,13 @@ function openChatWith(friend){
   if(inboxBtn && !inboxBtn.classList.contains("active")) inboxBtn.click();
   activeChatUid = friend.uid;
   activeChatFriend = friend;
+  activeChatIsGroup = false;
+  activeChatId = chatIdFor(friend.uid);
+  activeChatParticipants = [myUid, friend.uid];
+  activeChatGroupName = "";
   document.getElementById("chatName").textContent = friend.name;
+  document.getElementById("chatVoiceBtn").style.display = "";
+  document.getElementById("chatVideoBtn").style.display = "";
   document.getElementById("chatAvatar").style.background = friend.color;
   if(friend.avatarPhoto){
     document.getElementById("chatAvatar").style.backgroundImage = `url(${friend.avatarPhoto})`;
@@ -3378,8 +3512,7 @@ function openChatWith(friend){
   document.getElementById("chatMessages").innerHTML = `<div style="text-align:center; color:var(--text-faint); font-size:13px; padding:30px 10px;">Yükleniyor...</div>`;
   document.getElementById("chatView").classList.add("show");
   if(unsubActiveChat) unsubActiveChat();
-  const chatId = chatIdFor(friend.uid);
-  unsubActiveChat = db.collection("chats").doc(chatId).collection("messages")
+  unsubActiveChat = db.collection("chats").doc(activeChatId).collection("messages")
     .orderBy("createdAt","asc").limit(200)
     .onSnapshot(snap=>{
       const msgs = snap.docs.map(d=>d.data());
@@ -3387,13 +3520,47 @@ function openChatWith(friend){
     }, err=>{ console.error("chat listener error", err); });
 }
 
+/* Grup sohbeti açma — openChatWith ile aynı mesaj alt-koleksiyonunu
+   (chats/{chatId}/messages) kullanır, sadece üst belge participants'ı 2'den
+   fazla kişi içeriyor ve sesli/görüntülü arama butonları (grup araması henüz
+   yok) gizleniyor. */
+function openGroupChat(thread){
+  const inboxBtn = document.querySelector('.nav-btn[data-tab="inbox"]');
+  if(inboxBtn && !inboxBtn.classList.contains("active")) inboxBtn.click();
+  activeChatUid = null;
+  activeChatFriend = null;
+  activeChatIsGroup = true;
+  activeChatId = thread.chatId;
+  activeChatParticipants = thread.participants || [];
+  activeChatGroupName = thread.displayName || thread.groupName || "Grup";
+  document.getElementById("chatName").textContent = `${activeChatGroupName} (${activeChatParticipants.length})`;
+  document.getElementById("chatVoiceBtn").style.display = "none";
+  document.getElementById("chatVideoBtn").style.display = "none";
+  document.getElementById("chatAvatar").style.background = "var(--grad)";
+  document.getElementById("chatAvatar").style.backgroundImage = "none";
+  document.getElementById("chatAvatar").textContent = "👥";
+  document.getElementById("stickerPanel").classList.remove("show");
+  document.getElementById("chatMessages").innerHTML = `<div style="text-align:center; color:var(--text-faint); font-size:13px; padding:30px 10px;">Yükleniyor...</div>`;
+  document.getElementById("chatView").classList.add("show");
+  if(unsubActiveChat) unsubActiveChat();
+  unsubActiveChat = db.collection("chats").doc(activeChatId).collection("messages")
+    .orderBy("createdAt","asc").limit(200)
+    .onSnapshot(snap=>{
+      const msgs = snap.docs.map(d=>d.data());
+      renderChatMessagesFromList(msgs);
+    }, err=>{ console.error("group chat listener error", err); });
+}
+
 function renderChatMessagesFromList(msgs){
   const box = document.getElementById("chatMessages");
   if(!msgs.length){
     box.innerHTML = `<div style="text-align:center; color:var(--text-faint); font-size:13px; padding:30px 10px;">Henüz mesaj yok. İlk mesajı sen gönder 👋</div>`;
   } else {
-    box.innerHTML = msgs.map(m=>
-      `<div class="bubble ${m.from===myUid?'me':'them'} ${m.type==='sticker'?'sticker':''}">${m.type==='sticker'?m.t:escapeHtml(m.t)}</div>`).join("");
+    box.innerHTML = msgs.map(m=>{
+      const senderLabel = (activeChatIsGroup && m.from!==myUid)
+        ? `<div class="group-msg-sender">${escapeHtml(m.fromName || m.fromUser || "Kullanıcı")}</div>` : "";
+      return `<div class="bubble ${m.from===myUid?'me':'them'} ${m.type==='sticker'?'sticker':''}">${senderLabel}${m.type==='sticker'?m.t:escapeHtml(m.t)}</div>`;
+    }).join("");
   }
   box.scrollTop = box.scrollHeight;
 }
@@ -3401,35 +3568,49 @@ function renderChatMessagesFromList(msgs){
 document.getElementById("chatBack").addEventListener("click", ()=>{
   document.getElementById("chatView").classList.remove("show");
   if(unsubActiveChat){ unsubActiveChat(); unsubActiveChat = null; }
+  activeChatId = null;
+  activeChatIsGroup = false;
+  activeChatParticipants = [];
 });
 document.getElementById("chatSend").addEventListener("click", sendChatMsg);
 document.getElementById("chatInput").addEventListener("keydown", e=>{ if(e.key==="Enter") sendChatMsg(); });
 
 async function pushChatMessage(msg){
-  if(!activeChatUid) return;
-  if(isBlockedEitherWay(activeChatUid)){ toast("Bu kullanıcıyla mesajlaşamazsın"); return; }
-  const chatId = chatIdFor(activeChatUid);
-  const chatRef = db.collection("chats").doc(chatId);
+  if(!activeChatId) return;
+  if(!activeChatIsGroup && isBlockedEitherWay(activeChatUid)){ toast("Bu kullanıcıyla mesajlaşamazsın"); return; }
+  const chatRef = db.collection("chats").doc(activeChatId);
   try{
     // Önce üst "chats/{chatId}" belgesini oluştur/güncelle (participants dizisiyle),
     // SONRA mesajı ekle — güvenlik kuralları mesaj eklerken üst belgenin zaten var
     // olup olmadığını ve kullanıcının participants içinde olup olmadığını kontrol
     // ediyor, bu yüzden sıra önemli (ilk mesajda üst belge henüz yoksa reddedilir).
-    await chatRef.set({
-      participants: [myUid, activeChatUid],
-      lastMessage: msg.type==="sticker" ? msg.t : msg.t,
+    const chatPayload = {
+      participants: activeChatIsGroup ? activeChatParticipants : [myUid, activeChatUid],
+      lastMessage: msg.t,
       lastFrom: myUid,
       lastAt: FieldValue.serverTimestamp()
-    }, {merge:true});
-    await chatRef.collection("messages").add({ from: myUid, ...msg, createdAt: FieldValue.serverTimestamp() });
-    notifyUser(activeChatUid, "message");
+    };
+    if(activeChatIsGroup){
+      chatPayload.isGroup = true;
+      chatPayload.groupName = activeChatGroupName || "";
+    }
+    await chatRef.set(chatPayload, {merge:true});
+    await chatRef.collection("messages").add({
+      from: myUid, fromName: state.profile.name, fromUser: state.profile.user,
+      ...msg, createdAt: FieldValue.serverTimestamp()
+    });
+    if(activeChatIsGroup){
+      activeChatParticipants.filter(uid=>uid!==myUid).forEach(uid=> notifyUser(uid, "message"));
+    } else {
+      notifyUser(activeChatUid, "message");
+    }
   }catch(e){ console.error(e); toast("Mesaj gönderilemedi"); }
 }
 
 function sendChatMsg(){
   const input = document.getElementById("chatInput");
   const val = input.value.trim();
-  if(!val || !activeChatUid) return;
+  if(!val || !activeChatId) return;
   pushChatMessage({ t:val, type:"text" });
   input.value = "";
 }
@@ -3438,7 +3619,7 @@ const STICKERS = ["😀","😂","😍","🥳","🔥","❤️","👍","👏","�
 document.getElementById("stickerPanel").innerHTML = STICKERS.map(s=>`<button data-s="${s}">${s}</button>`).join("");
 document.getElementById("stickerPanel").querySelectorAll("button").forEach(b=>{
   b.addEventListener("click", ()=>{
-    if(!activeChatUid) return;
+    if(!activeChatId) return;
     pushChatMessage({ t:b.dataset.s, type:"sticker" });
   });
 });
@@ -3450,6 +3631,74 @@ document.getElementById("chatVoiceBtn").innerHTML = ICONS.phone;
 document.getElementById("chatVideoBtn").innerHTML = ICONS.videoCall;
 document.getElementById("chatVoiceBtn").addEventListener("click", ()=> startCall(false));
 document.getElementById("chatVideoBtn").addEventListener("click", ()=> startCall(true));
+
+/* ===================== GRUP SOHBETİ OLUŞTURMA =====================
+   Aday listesi takip ettiğim kişiler (followingSet) — DM açma mantığıyla
+   tutarlı (özel hesaplara zaten sadece takip edip kabul edilince mesaj
+   atabiliyoruz). En az 2 kişi seçilince "chats" koleksiyonunda rastgele
+   ID'li yeni bir belge oluşturulur (participants.length > 2 → grup). */
+function openNewGroupOverlay(){
+  document.getElementById("newGroupNameInput").value = "";
+  const errEl = document.getElementById("newGroupError");
+  errEl.classList.remove("show");
+  errEl.textContent = "";
+  const candidates = usersDirectory.filter(u=>followingSet.has(u.uid));
+  const list = document.getElementById("newGroupMemberList");
+  if(!candidates.length){
+    list.innerHTML = `<div style="padding:20px 10px;text-align:center;color:var(--text-faint);font-size:13px;line-height:1.5;">Grup kurmak için önce birilerini takip etmen gerekiyor.</div>`;
+  } else {
+    list.innerHTML = candidates.map(u=>`
+      <label class="friend-row" style="cursor:pointer;">
+        <input type="checkbox" class="newgroup-member-cb" data-uid="${u.uid}" style="width:18px;height:18px;margin-right:2px;accent-color:var(--accent,#8b5cf6);flex-shrink:0;">
+        ${avatarCircle(42, u.color||"#8b5cf6", initials(u.name||"?"), u.avatarPhoto)}
+        <div class="friend-meta"><div class="fname">${escapeHtml(u.name||"")}</div><div class="fsub">${escapeHtml(u.user||"")}</div></div>
+      </label>`).join("");
+  }
+  document.getElementById("newGroupOverlay").classList.add("show");
+}
+document.getElementById("newGroupBtn").addEventListener("click", openNewGroupOverlay);
+document.getElementById("newGroupCancel").addEventListener("click", ()=>{
+  document.getElementById("newGroupOverlay").classList.remove("show");
+});
+document.getElementById("newGroupCreateBtn").addEventListener("click", async ()=>{
+  const errEl = document.getElementById("newGroupError");
+  errEl.classList.remove("show");
+  const selected = Array.from(document.querySelectorAll(".newgroup-member-cb:checked")).map(cb=>cb.dataset.uid);
+  if(selected.length < 2){
+    errEl.textContent = "En az 2 kişi seçmelisin.";
+    errEl.classList.add("show");
+    return;
+  }
+  const createBtn = document.getElementById("newGroupCreateBtn");
+  const originalLabel = createBtn.textContent;
+  createBtn.disabled = true;
+  createBtn.textContent = "Oluşturuluyor...";
+  try{
+    const participants = [myUid, ...selected];
+    const memberNames = selected.map(uid=>{
+      const u = usersDirectory.find(x=>x.uid===uid);
+      return u ? u.name : "Kullanıcı";
+    });
+    const typedName = document.getElementById("newGroupNameInput").value.trim();
+    const groupName = typedName || memberNames.slice(0,3).join(", ");
+    const chatRef = db.collection("chats").doc();
+    await chatRef.set({
+      participants, isGroup: true, groupName,
+      createdBy: myUid, createdAt: FieldValue.serverTimestamp(),
+      lastMessage: "", lastFrom: myUid, lastAt: FieldValue.serverTimestamp()
+    });
+    document.getElementById("newGroupOverlay").classList.remove("show");
+    openGroupChat({ chatId: chatRef.id, isGroup:true, participants, groupName, displayName: groupName });
+    toast("Grup oluşturuldu");
+  }catch(e){
+    console.error("grup oluşturulamadı", e);
+    errEl.textContent = "Grup oluşturulamadı, tekrar dene.";
+    errEl.classList.add("show");
+  } finally {
+    createBtn.disabled = false;
+    createBtn.textContent = originalLabel;
+  }
+});
 
 /* ---------- Real WebRTC voice/video calling, signaled through Firestore
    (calls/{callId} + callerCandidates/calleeCandidates subcollections).
@@ -3784,6 +4033,7 @@ async function openOtherProfile(friend){
         <div><b>${fmt(friend.likes||0)}</b><span>Beğeni</span></div>
       </div>
       <div class="pbio">${escapeHtml(friend.bio||"").replace(/\\n/g,"<br>")}</div>
+      ${friend.profileIntroURL ? `<div class="intro-play-chip" id="playIntroBtnOther">${ICONS.play.replace('viewBox="0 0 24 24"','viewBox="0 0 24 24" width="12" height="12"')}<span id="playIntroLabelOther">Introyu Dinle</span></div>` : ""}
       ${isFounderAccount() && friend.uid!==myUid ? `<button class="grant-tick-btn ${friend.verified?'on':''}" id="grantTickBtn">${ICONS.verified} ${friend.verified?'Mavi Tiki Kaldır':'Mavi Tik Ver'}</button>` : ""}
       <div class="pbtn-row">
         <button class="follow-btn otherfollow-btn ${iFollow||requested?'following':''}">${followLabel}</button>
@@ -3819,6 +4069,8 @@ async function openOtherProfile(friend){
     else toast(`${friend.user} takip ediliyor`);
     toggleFollow(friend.uid, friend.private).then(()=> openOtherProfile(friend));
   });
+  const playIntroBtnOther = el.querySelector("#playIntroBtnOther");
+  if(playIntroBtnOther) playIntroBtnOther.addEventListener("click", ()=> toggleIntroPlay(friend.profileIntroURL, playIntroBtnOther));
   const grantTickBtn = document.getElementById("grantTickBtn");
   if(grantTickBtn){
     grantTickBtn.addEventListener("click", async ()=>{
@@ -3933,6 +4185,34 @@ async function searchUsers(term){
 }
 
 /* ===================== PROFILE ===================== */
+/* Profil introsu (kısa sesli tanıtım) çalma/durdurma — tek paylaşılan <audio>
+   elemanı kullanılır, böylece aynı anda sadece bir intro çalar ve hangi
+   profildeyken tetiklendiyse (kendi profilim/başka birinin profili) o
+   çipin görünümü güncellenir. */
+let profileIntroAudio = null;
+let profileIntroPlayingBtn = null;
+function toggleIntroPlay(url, btnEl){
+  if(!url || !btnEl) return;
+  if(profileIntroAudio && profileIntroPlayingBtn === btnEl && !profileIntroAudio.paused){
+    profileIntroAudio.pause();
+    return;
+  }
+  if(profileIntroPlayingBtn && profileIntroPlayingBtn !== btnEl){
+    profileIntroPlayingBtn.classList.remove("playing");
+    const prevLabel = profileIntroPlayingBtn.querySelector("#playIntroLabel") || profileIntroPlayingBtn.querySelector("span");
+    if(prevLabel) prevLabel.textContent = "Introyu Dinle";
+  }
+  if(!profileIntroAudio) profileIntroAudio = new Audio();
+  profileIntroAudio.src = url;
+  profileIntroPlayingBtn = btnEl;
+  const label = btnEl.querySelector("#playIntroLabel") || btnEl.querySelector("span");
+  profileIntroAudio.play().then(()=>{
+    btnEl.classList.add("playing");
+    if(label) label.textContent = "Çalıyor...";
+  }).catch(()=> toast("Çalınamadı"));
+  profileIntroAudio.onended = ()=>{ btnEl.classList.remove("playing"); if(label) label.textContent = "Introyu Dinle"; };
+  profileIntroAudio.onpause = ()=>{ btnEl.classList.remove("playing"); if(label) label.textContent = "Introyu Dinle"; };
+}
 function renderProfile(){
   const pr = state.profile;
   const el = document.getElementById("profileScroll");
@@ -3952,6 +4232,7 @@ function renderProfile(){
         <div><b>${fmt(pr.likes)}</b><span>Beğeni</span></div>
       </div>
       <div class="pbio">${pr.bio.replace(/\\n/g,"<br>")}</div>
+      ${pr.profileIntroURL ? `<div class="intro-play-chip" id="playIntroBtn">${ICONS.play.replace('viewBox="0 0 24 24"','viewBox="0 0 24 24" width="12" height="12"')}<span id="playIntroLabel">Introyu Dinle</span></div>` : ""}
       <div class="token-card">
         <div class="token-amount">🪙 ${isFounderAccount() ? "∞" : fmt(pr.tokens||0)} <span>Jeton</span></div>
         <button class="token-leaderboard-btn" id="openGlowoLiveBtn">${ICONS.trophy} GlowoLive En Değerlileri</button>
@@ -3987,6 +4268,8 @@ function renderProfile(){
   document.getElementById("editProfileBtn").addEventListener("click", openEditModal);
   document.getElementById("shareProfileBtn").addEventListener("click", ()=> toast("Profil bağlantısı kopyalandı"));
   document.getElementById("openGlowoLiveBtn").addEventListener("click", openGlowoLive);
+  const playIntroBtn = document.getElementById("playIntroBtn");
+  if(playIntroBtn) playIntroBtn.addEventListener("click", ()=> toggleIntroPlay(pr.profileIntroURL, playIntroBtn));
 }
 
 /* edit profile modal */
@@ -4038,8 +4321,111 @@ document.getElementById("removeAvatarBtn").addEventListener("click", ()=>{
   updateAvatarPreview();
 });
 document.getElementById("editName").addEventListener("input", updateAvatarPreview);
+
+/* ===================== PROFİL İNTROSU (kısa sesli tanıtım) =====================
+   Profil fotoğrafı gibi "pending" bir değer tutuyoruz: undefined = bu oturumda
+   değiştirilmedi, null = kaldırıldı, string (Cloudinary URL) = yeni kaydedildi.
+   Kayıt bitince hemen Cloudinary'ye yükleniyor (video post'larla AYNI preset —
+   Cloudinary'de ses dosyaları da "video" resource type'ı altında kabul edilir),
+   Firestore'a yazma işlemi ise diğer alanlar gibi ancak "Kaydet"e basılınca olur. */
+let pendingIntroURL = undefined;
+let introStream = null, introRecorder = null, introChunks = [], introRecording = false, introTimerInt = null, introSeconds = 0;
+const INTRO_MAX_SECONDS = 15;
+function currentIntroURL(){ return pendingIntroURL !== undefined ? pendingIntroURL : state.profile.profileIntroURL; }
+function updateIntroUI(){
+  const status = document.getElementById("introStatus");
+  const playBtn = document.getElementById("introPlayBtn");
+  const removeBtn = document.getElementById("introRemoveBtn");
+  const recordBtn = document.getElementById("introRecordBtn");
+  const url = currentIntroURL();
+  if(introRecording){
+    recordBtn.textContent = `⏹ Durdur (${INTRO_MAX_SECONDS - introSeconds}sn)`;
+    playBtn.style.display = "none";
+    removeBtn.style.display = "none";
+    status.textContent = "Kaydediliyor...";
+    return;
+  }
+  recordBtn.textContent = url ? "🎙️ Yeniden Kaydet" : "🎙️ Kaydet";
+  playBtn.style.display = url ? "" : "none";
+  removeBtn.style.display = url ? "" : "none";
+  if(status.textContent !== "Yükleniyor...") status.textContent = "";
+}
+function stopIntroRecording(){
+  if(introRecorder && introRecorder.state !== "inactive") introRecorder.stop();
+}
+document.getElementById("introRecordBtn").addEventListener("click", async ()=>{
+  if(introRecording){ stopIntroRecording(); return; }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    toast("Bu cihaz mikrofon kaydını desteklemiyor");
+    return;
+  }
+  try{
+    introStream = await navigator.mediaDevices.getUserMedia({audio:true});
+  }catch(e){
+    toast("Mikrofon izni verilmedi");
+    return;
+  }
+  introChunks = [];
+  try{
+    introRecorder = new MediaRecorder(introStream);
+  }catch(e){
+    toast("Bu cihazda ses kaydı başlatılamadı");
+    introStream.getTracks().forEach(t=>t.stop());
+    introStream = null;
+    return;
+  }
+  introRecorder.ondataavailable = (e)=>{ if(e.data && e.data.size) introChunks.push(e.data); };
+  introRecorder.onstop = async ()=>{
+    if(introStream){ introStream.getTracks().forEach(t=>t.stop()); introStream = null; }
+    if(introTimerInt){ clearInterval(introTimerInt); introTimerInt = null; }
+    introRecording = false;
+    const blob = new Blob(introChunks, {type: (introRecorder && introRecorder.mimeType) || "audio/webm"});
+    if(blob.size === 0){ updateIntroUI(); return; }
+    document.getElementById("introStatus").textContent = "Yükleniyor...";
+    updateIntroUI();
+    try{
+      const CLOUDINARY_CLOUD_NAME = "h2yj0ott";
+      const CLOUDINARY_UPLOAD_PRESET = "glowo_videos";
+      const form = new FormData();
+      form.append("file", blob, "intro.webm");
+      form.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`, { method:"POST", body: form });
+      const data = await res.json();
+      if(!res.ok || !data.secure_url) throw new Error(data?.error?.message || "Cloudinary yükleme hatası");
+      pendingIntroURL = data.secure_url;
+      toast("Intro kaydedildi");
+    }catch(e){
+      console.error("intro yükleme hatası", e);
+      toast("Intro yüklenemedi, tekrar dene");
+    } finally {
+      document.getElementById("introStatus").textContent = "";
+      updateIntroUI();
+    }
+  };
+  introRecorder.start();
+  introRecording = true;
+  introSeconds = 0;
+  updateIntroUI();
+  introTimerInt = setInterval(()=>{
+    introSeconds += 1;
+    if(introSeconds >= INTRO_MAX_SECONDS){ stopIntroRecording(); return; }
+    updateIntroUI();
+  }, 1000);
+});
+document.getElementById("introPlayBtn").addEventListener("click", ()=>{
+  const url = currentIntroURL();
+  if(!url) return;
+  toggleIntroPlay(url, document.getElementById("introPlayBtn"));
+});
+document.getElementById("introRemoveBtn").addEventListener("click", ()=>{
+  pendingIntroURL = null;
+  updateIntroUI();
+});
+
 function openEditModal(){
   pendingAvatarPhoto = undefined;
+  pendingIntroURL = undefined;
+  updateIntroUI();
   document.getElementById("editName").value = state.profile.name;
   document.getElementById("editUsername").value = state.profile.user.replace("@","");
   document.getElementById("editBirthdate").value = state.profile.birthdate || "";
@@ -4067,6 +4453,7 @@ document.getElementById("saveEdit").addEventListener("click", async ()=>{
   const sel = document.querySelector(".color-swatch.sel");
   const newColor = sel ? sel.dataset.c : state.profile.color;
   const newAvatarPhoto = pendingAvatarPhoto !== undefined ? pendingAvatarPhoto : state.profile.avatarPhoto;
+  const newIntroURL = pendingIntroURL !== undefined ? pendingIntroURL : state.profile.profileIntroURL;
 
   saveBtn.disabled = true;
   saveBtn.textContent = "Kaydediliyor...";
@@ -4096,7 +4483,8 @@ document.getElementById("saveEdit").addEventListener("click", async ()=>{
     }
     await db.collection("users").doc(myUid).set({
       name: newName, user: "@"+newUsername, username: newUsername,
-      bio: newBio, color: newColor, birthdate: bd, avatarPhoto: newAvatarPhoto || null
+      bio: newBio, color: newColor, birthdate: bd, avatarPhoto: newAvatarPhoto || null,
+      profileIntroURL: newIntroURL || null
     }, {merge:true});
     state.profile.name = newName;
     state.profile.user = "@"+newUsername;
@@ -4105,6 +4493,7 @@ document.getElementById("saveEdit").addEventListener("click", async ()=>{
     state.profile.bio = newBio;
     state.profile.color = newColor;
     state.profile.avatarPhoto = newAvatarPhoto || null;
+    state.profile.profileIntroURL = newIntroURL || null;
     persistAccount();
     document.getElementById("editOverlay").classList.remove("show");
     renderProfile();
