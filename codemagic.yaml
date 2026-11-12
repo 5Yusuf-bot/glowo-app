@@ -88,18 +88,6 @@ workflows:
   # iOS - SADECE KENDİ TELEFONUNA KURMAK İÇİN, Apple Developer Program
   # (yıllık 99$) ÜYELİĞİ OLMADAN. App Store'a YÜKLENEMEZ, sadece
   # kendi iPhone'una "sideload" etmek için kullanılır.
-  #
-  # Nasıl çalışır: Bu iş akışı uygulamayı HİÇBİR imza olmadan (unsigned)
-  # derler ve normal bir .ipa gibi paketler. Bunu App Store Connect'e
-  # falan yüklemiyoruz — imzasız olduğu için kendi başına telefona
-  # kurulamaz. Onun yerine ücretsiz "Sideloadly" programını (Windows
-  # veya Mac, bilgisayarına kur) kullanıp, ÜCRETSİZ Apple ID'inle
-  # (99$ ödemeden) bu imzasız .ipa'yı kendi imzanla imzalatıp telefona
-  # USB kablosuyla kuruyorsun. Tek dezavantajı: ücretsiz Apple ID ile
-  # imzalanan uygulamalar 7 günde bir "süresi doldu" diyip kapanır —
-  # o zaman aynı .ipa'yı Sideloadly'e tekrar sürükleyip yeniden
-  # imzalatman (birkaç saniye sürer) yeterli, tekrar build almana
-  # gerek yok.
   # ============================================================
   ios-personal-unsigned:
     name: Glowo - iOS Kişisel Kullanım (imzasız, App Store'suz)
@@ -178,20 +166,6 @@ workflows:
     artifacts:
       - glowo-unsigned.ipa
 
-  # ============================================================
-  # ANDROID - APK üretimi (APKPure gibi üçüncü parti mağazalara
-  # yüklemek için). Bu iş akışı imzalı (signed) bir "release" APK
-  # üretir, çünkü çoğu mağaza imzasız/debug APK kabul etmez.
-  #
-  # NOT: İmzalama anahtarı (keystore) her build'de OTOMATİK üretilir
-  # ve build çıktısı olarak indirilebilir hale gelir
-  # (glowo-release-key.jks). İlk build'den sonra bu dosyayı indirip
-  # GÜVENLİ bir yerde sakla. Uygulamayı GÜNCELLERKEN aynı anahtarla
-  # imzalamak gerekir, yoksa mağazalar "farklı imza, güncelleme
-  # kabul edilmiyor" diyebilir. Şimdilik ilk sürüm için script kendi
-  # anahtarını üretiyor; ileride "kalıcı/sabit imza" istersen haber
-  # ver, o kısmı ayarlarız.
-  # ============================================================
   android-release:
     name: Glowo - Android Release (APK)
     max_build_duration: 60
@@ -227,11 +201,6 @@ workflows:
           npx cap sync android
       - name: Kamera/Mikrofon izinlerini AndroidManifest.xml'e ekle
         script: |
-          # android/ klasörü her build'de npx cap add ile SIFIRDAN üretildiği
-          # için (repoda kalıcı durmuyor), kamera/mikrofon izinlerini burada,
-          # her build'de otomatik olarak <application> etiketinden hemen önce
-          # enjekte ediyoruz. awk kullanıyoruz çünkü çok satırlı ekleme sed'den
-          # daha güvenilir ve her ortamda (Linux/Mac) hazır geliyor.
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST" ]; then
             if ! grep -q "android.permission.CAMERA" "$MANIFEST"; then
@@ -259,11 +228,6 @@ workflows:
           fi
       - name: Push bildirimleri için Google Services'i kur
         script: |
-          # google-services.json, Firebase Console'da "Android uygulaması ekle"
-          # ile (paket adı: com.yusuf.glowo) oluşturulup indirilir ve GitHub
-          # deposunun KÖKÜNE yüklenir. Burada yoksa build'i durdurmuyoruz —
-          # sadece push bildirimleri o build'de çalışmaz, uygulamanın geri
-          # kalanı normal şekilde derlenir.
           if [ ! -f google-services.json ]; then
             echo "UYARI: google-services.json bulunamadı — push bildirimleri BU BUILD'DE çalışmayacak."
             echo "Firebase Console > Proje ayarları > Android uygulaması ekle (paket: com.yusuf.glowo) ile indirip repo köküne yükle."
@@ -283,12 +247,6 @@ workflows:
           npx capacitor-assets generate --android --iconBackgroundColor '#0a0a0d' --iconBackgroundColorDark '#0a0a0d' --splashBackgroundColor '#0a0a0d' --splashBackgroundColorDark '#0a0a0d'
       - name: İkon dosyalarını yerleştir
         script: |
-          # capacitor-assets bazen ikonu doğru üretmiyor / stok ikonu bırakıyor.
-          # Bu adım, elle hazırlanmış Glowo ikon dosyalarını (repo köküne
-          # yüklenmiş düz dosyalar) doğru Android klasörlerine kopyalayıp
-          # capacitor-assets'in ürettiği ikonların ÜZERİNE yazıyor. Böylece
-          # açılış ekranı (splash) capacitor-assets'ten kalıyor, ama ikon
-          # kesin olarak bizim ürettiğimiz Glowo logosu oluyor.
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
           mkdir -p android/app/src/main/res/mipmap-mdpi
           mkdir -p android/app/src/main/res/mipmap-hdpi
@@ -381,17 +339,6 @@ workflows:
       - android/app/build/outputs/apk/release/*.apk
       - glowo-release-key.jks
 
-  # ============================================================
-  # ANDROID - Play Store için AAB (Android App Bundle) üretimi.
-  # Play Store artık .apk KABUL ETMİYOR, sadece .aab. Bu iş akışı
-  # website/APKPure için kullanılan (android-release) İLE AYNI
-  # imzalama anahtarını (glowo-release-key.jks) kullanır — böylece
-  # tek bir kimlikle imzalanmış oluyoruz. Ayrıca Play Store'un yeni
-  # kuralı gereği (31 Ağustos 2026'dan itibaren) hedef Android
-  # sürümünü Android 16 (API 36) olacak şekilde zorluyor - bu SADECE
-  # bu workflow'u etkiler, android-release (website APK'sı) eskisi
-  # gibi kalır, dokunulmadı.
-  # ============================================================
   android-playstore:
     name: Glowo - Android Release (AAB - Play Store)
     max_build_duration: 60
@@ -454,11 +401,6 @@ workflows:
           fi
       - name: Push bildirimleri için Google Services'i kur
         script: |
-          # google-services.json, Firebase Console'da "Android uygulaması ekle"
-          # ile (paket adı: com.yusuf.glowo) oluşturulup indirilir ve GitHub
-          # deposunun KÖKÜNE yüklenir. Burada yoksa build'i durdurmuyoruz —
-          # sadece push bildirimleri o build'de çalışmaz, uygulamanın geri
-          # kalanı normal şekilde derlenir.
           if [ ! -f google-services.json ]; then
             echo "UYARI: google-services.json bulunamadı — push bildirimleri BU BUILD'DE çalışmayacak."
             echo "Firebase Console > Proje ayarları > Android uygulaması ekle (paket: com.yusuf.glowo) ile indirip repo köküne yükle."
@@ -528,12 +470,9 @@ workflows:
           echo "Glowo ikon dosyaları başarıyla yerleştirildi."
       - name: Hedef Android sürümünü Android 16 (API 36) yap
         script: |
-          # Play Store, 31 Ağustos 2026'dan itibaren yeni/güncellenen
-          # uygulamaların en az API 36 hedeflemesini zorunlu kılıyor.
-          # Capacitor'ın varsayılan android/variables.gradle dosyasındaki
-          # eski değerlerin üzerine yazıyoruz.
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 36/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 36/' android/variables.gradle
+          sed -i 's/minSdkVersion = .*/minSdkVersion = 24/' android/variables.gradle
           echo "--- android/variables.gradle ---"
           cat android/variables.gradle
       - name: Android SDK 36 platformunu kur
@@ -557,23 +496,12 @@ workflows:
           fi
       - name: Gradle'a imzalama ve hedef API ayarlarını ekle
         script: |
-          # variables.gradle üzerinden sed ile yapılan düzeltme Capacitor'ın
-          # ürettiği dosyanın tam biçimine bağlı olduğu için garanti değildi
-          # (bir önceki build'de hâlâ API 34 çıktı verdi). Burada compileSdkVersion
-          # ve targetSdkVersion'ı DOĞRUDAN app/build.gradle'a ikinci bir
-          # android{} bloğu olarak ekliyoruz - Gradle bu tür basit atamalarda
-          # dosyadaki SON değeri kullanır, yani bu kesin olarak kazanır.
-          #
-          # versionCode da aynı şekilde $BUILD_NUMBER'a (Codemagic'in bu
-          # workflow için otomatik artan build numarası, iOS tarafında da
-          # kullanılıyor) bağlanıyor - Play Console her yüklemede bir
-          # ÖNCEKİNDEN YÜKSEK bir sürüm kodu istiyor, Capacitor'ın sabit "1"
-          # değeri ikinci yüklemede çakışıyordu.
           cat >> android/app/build.gradle << EOF
 
           android {
               compileSdkVersion 36
               defaultConfig {
+                  minSdkVersion 24
                   targetSdkVersion 36
                   versionCode $BUILD_NUMBER
               }
@@ -603,9 +531,6 @@ workflows:
       - android/app/build/outputs/bundle/release/*.aab
       - glowo-release-key.jks
 
-  # Daha hızlı/basit bir test derlemesi istersen (imzasız/debug APK,
-  # kendi telefonuna kurup denemek için yeterli, ama çoğu mağaza
-  # KABUL ETMEZ - sadece hızlı test amaçlı):
   android-debug:
     name: Glowo - Android Debug (test APK)
     max_build_duration: 30
